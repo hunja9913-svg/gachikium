@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light only">
+  <meta name="theme-color" content="#FFA726">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <title>가치키움 🌱</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light only !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      html {
+        background: #FFF8F0 !important;
+        color: #5B4A3F !important;
+      }
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Jua', sans-serif;
+      background: #FFF8F0;
+      color: #5B4A3F;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: clamp(16px, 4vw, 32px);
+      padding-bottom: 40px;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 20% 20%, rgba(255, 200, 100, 0.15) 0%, transparent 50%),
+        radial-gradient(circle at 80% 80%, rgba(100, 220, 180, 0.12) 0%, transparent 50%),
+        radial-gradient(circle at 60% 10%, rgba(255, 150, 150, 0.10) 0%, transparent 40%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ===== HEADER ===== */
+    .header {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: clamp(20px, 5vw, 36px);
+      position: relative;
+      z-index: 1;
+      animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .header-title {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header-title h1 {
+      font-size: clamp(28px, 7vw, 42px);
+      line-height: 1.1;
+      color: #5B4A3F;
+    }
+
+    .header-title p {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(13px, 3.2vw, 17px);
+      color: #A08060;
+      margin-top: 2px;
+    }
+
+    .lang-btn {
+      background: white;
+      border: 2px solid #E8D8C0;
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(13px, 3vw, 15px);
+      color: #5B4A3F;
+      cursor: pointer;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.08);
+      transition: transform 0.1s, box-shadow 0.1s;
+      white-space: nowrap;
+    }
+
+    .lang-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    /* ===== GAME GRID ===== */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(12px, 3vw, 20px);
+      width: 100%;
+      max-width: 480px;
+      position: relative;
+      z-index: 1;
+    }
+
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: clamp(20px, 5vw, 28px) clamp(12px, 3vw, 20px);
+      border-radius: 24px;
+      cursor: pointer;
+      text-decoration: none;
+      color: inherit;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.10), 0 2px 12px rgba(0, 0, 0, 0.06);
+      transition: transform 0.12s, box-shadow 0.12s;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .card:nth-child(1) {
+      animation-delay: 0.1s;
+      background: #FFF8E7;
+    }
+
+    .card:nth-child(2) {
+      animation-delay: 0.2s;
+      background: #EEFBF5;
+    }
+
+    .card:nth-child(3) {
+      animation-delay: 0.3s;
+      background: #FFF0E8;
+    }
+
+    .card:nth-child(4) {
+      animation-delay: 0.4s;
+      background: #F0EEFF;
+    }
+
+    .card:active {
+      transform: translateY(4px) scale(0.97);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.10), 0 1px 8px rgba(0, 0, 0, 0.06);
+    }
+
+    .card-emoji {
+      font-size: clamp(44px, 12vw, 64px);
+      line-height: 1;
+      filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.12));
+    }
+
+    .card-title {
+      font-size: clamp(16px, 4.5vw, 22px);
+      text-align: center;
+      color: #4A3A30;
+      line-height: 1.2;
+    }
+
+    .card-desc {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(12px, 3vw, 15px);
+      color: #8A7060;
+      text-align: center;
+      line-height: 1.3;
+    }
+
+    /* ===== SUPPORT SECTION ===== */
+    .support {
+      margin-top: clamp(28px, 6vw, 44px);
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      position: relative;
+      z-index: 1;
+      animation: dropIn 0.6s 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .support-text {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(13px, 3.2vw, 16px);
+      color: #A08060;
+      text-align: center;
+    }
+
+    .support-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #FFE066, #FFA726);
+      border: none;
+      border-radius: 50px;
+      padding: clamp(12px, 3vw, 16px) clamp(24px, 6vw, 36px);
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(15px, 3.8vw, 19px);
+      color: white;
+      text-decoration: none;
+      cursor: pointer;
+      box-shadow: 0 5px 0 rgba(200, 120, 0, 0.35), 0 2px 12px rgba(255, 167, 38, 0.25);
+      transition: transform 0.1s, box-shadow 0.1s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .support-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 2px 0 rgba(200, 120, 0, 0.35);
+    }
+
+    /* ===== DECORATIONS ===== */
+    .deco {
+      position: fixed;
+      font-size: clamp(28px, 6vw, 44px);
+      opacity: 0.12;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .deco-1 {
+      top: 5%;
+      left: 3%;
+      animation: floatA 4s ease-in-out infinite;
+    }
+
+    .deco-2 {
+      top: 8%;
+      right: 4%;
+      animation: floatB 5s ease-in-out infinite;
+    }
+
+    .deco-3 {
+      bottom: 12%;
+      left: 5%;
+      animation: floatB 4.5s ease-in-out infinite;
+    }
+
+    .deco-4 {
+      bottom: 15%;
+      right: 3%;
+      animation: floatA 3.8s ease-in-out infinite;
+    }
+
+    /* ===== ANIMATIONS ===== */
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-24px) scale(0.95);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.7);
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1);
+      }
+    }
+
+    @keyframes floatA {
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(-3deg);
+      }
+
+      50% {
+        transform: translateY(-12px) rotate(3deg);
+      }
+    }
+
+    @keyframes floatB {
+
+      0%,
+      100% {
+        transform: translateY(0px) rotate(3deg);
+      }
+
+      50% {
+        transform: translateY(-10px) rotate(-3deg);
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Decorations -->
+  <div class="deco deco-1">⭐</div>
+  <div class="deco deco-2">🌈</div>
+  <div class="deco deco-3">🎵</div>
+  <div class="deco deco-4">💫</div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="header-title">
+      <h1 data-ko="가치키움 🌱" data-en="GachiKium 🌱">가치키움 🌱</h1>
+      <p data-ko="아이와 함께하는 학습놀이" data-en="Learning Play with Your Child">아이와 함께하는 학습놀이</p>
+    </div>
+    <button class="lang-btn" id="langBtn" onclick="toggleLang()" style="display: none;">🇺🇸 English</button>
+  </div>
+
+  <!-- Game Cards -->
+  <div class="grid">
+    <a class="card" href="hangul-touch.html">
+      <div class="card-emoji">🔤</div>
+      <div class="card-title" data-ko="한글 자음" data-en="Korean ABC">한글 자음</div>
+      <div class="card-desc" data-ko="ㄱ~ㅎ 터치 + 따라쓰기" data-en="Touch & Trace ㄱ~ㅎ">ㄱ~ㅎ 터치 + 따라쓰기</div>
+    </a>
+    <a class="card" href="number-touch.html">
+      <div class="card-emoji">🔢</div>
+      <div class="card-title" data-ko="숫자 놀이" data-en="Number Play">숫자 놀이</div>
+      <div class="card-desc" data-ko="1~9 터치 + 따라쓰기" data-en="Touch & Trace 1~9">1~9 터치 + 따라쓰기</div>
+    </a>
+    <a class="card" href="quiz-hint.html">
+      <div class="card-emoji">💡</div>
+      <div class="card-title" data-ko="힌트 퀴즈" data-en="Hint Quiz">힌트 퀴즈</div>
+      <div class="card-desc" data-ko="힌트 듣고 맞춰봐요!" data-en="Listen & guess!">힌트 듣고 맞춰봐요!</div>
+    </a>
+  </div>
+
+  <!-- Support -->
+  <div class="support" style="display: none;">
+    <p class="support-text" data-ko="가치키움은 광고 없는 무료 서비스예요 💛" data-en="GachiKium is free with no ads 💛">가치키움은 광고 없는 무료
+      서비스예요 💛</p>
+    <a class="support-btn" href="#" id="supportBtn">
+      <span>☕</span>
+      <span data-ko="후원하기 (카카오페이)" data-en="Support Us (KakaoPay)">후원하기 (카카오페이)</span>
+    </a>
+  </div>
+
+  <script>
+    // ===== LANGUAGE =====
+    const I18N = {};
+    document.querySelectorAll('[data-ko]').forEach(el => {
+      I18N[el] = { ko: el.dataset.ko, en: el.dataset.en };
+    });
+
+    function setLang(lang) {
+      document.documentElement.lang = lang;
+      localStorage.setItem('gk-lang', lang);
+      document.querySelectorAll('[data-ko]').forEach(el => {
+        el.textContent = lang === 'en' ? el.dataset.en : el.dataset.ko;
+      });
+      document.getElementById('langBtn').textContent =
+        lang === 'en' ? '🇰🇷 한국어' : '🇺🇸 English';
+    }
+
+    function toggleLang() {
+      const cur = localStorage.getItem('gk-lang') || 'ko';
+      setLang(cur === 'ko' ? 'en' : 'ko');
+    }
+
+    // Init language
+    setLang(localStorage.getItem('gk-lang') || 'ko');
+
+    // ===== PWA =====
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/service-worker.js');
+    }
+  </script>
+</body>
+
+</html>

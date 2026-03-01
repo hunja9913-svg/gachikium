@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="ko" style="background-color:#FFF8E7 !important;color:#5B4A3F !important;">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="color-scheme" content="light only">
+  <title>ㄱㄴㄷ 터치놀이</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&family=Gaegu:wght@700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light only !important;
+    }
+
+    @media (prefers-color-scheme: dark) {
+
+      html,
+      body,
+      div,
+      button,
+      h1,
+      p,
+      span,
+      canvas {
+        color-scheme: light only !important;
+      }
+    }
+
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html {
+      width: 100%;
+      height: 100%;
+      background-color: #FFF8E7 !important;
+    }
+
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      touch-action: manipulation;
+      -webkit-user-select: none;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Jua', sans-serif;
+      background-color: #FFF8E7 !important;
+      color: #5B4A3F !important;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      min-height: 100dvh;
+      position: relative;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background-color: #FFF8E7 !important;
+      background-image:
+        radial-gradient(circle at 20% 80%, rgba(255, 200, 100, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 80% 20%, rgba(150, 220, 255, 0.3) 0%, transparent 50%),
+        radial-gradient(circle at 50% 50%, rgba(255, 180, 200, 0.15) 0%, transparent 60%);
+    }
+
+    .screen {
+      display: none;
+      width: 100%;
+      height: 100%;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 12px;
+      animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .header h1 {
+      font-size: clamp(24px, 5vw, 36px);
+      color: #5B4A3F !important;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 0 rgba(255, 255, 255, 0.8);
+    }
+
+    .header p {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(14px, 3vw, 20px);
+      color: #9B8B7E !important;
+      margin-top: 2px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: clamp(8px, 2vw, 14px);
+      padding: clamp(8px, 2vw, 16px);
+      max-width: 520px;
+      width: 95%;
+    }
+
+    .letter-btn {
+      aspect-ratio: 1;
+      border: none;
+      border-radius: 20px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(28px, 7vw, 48px);
+      color: #ffffff !important;
+      cursor: pointer;
+      position: relative;
+      transition: transform 0.1s, box-shadow 0.1s;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      outline: none;
+      -webkit-appearance: none;
+      appearance: none;
+      animation: dropIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .letter-btn:active {
+      transform: scale(0.92) translateY(3px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.1);
+    }
+
+    .letter-btn .sparkle {
+      position: absolute;
+      pointer-events: none;
+      font-size: clamp(16px, 4vw, 28px);
+      animation: sparkleUp 0.7s ease-out forwards;
+      z-index: 10;
+    }
+
+    .result-overlay {
+      position: fixed;
+      inset: 0;
+      background-color: rgba(0, 0, 0, 0.25) !important;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+    }
+
+    .result-overlay.active {
+      display: flex;
+    }
+
+    .result-card {
+      background-color: #ffffff !important;
+      color: #5B4A3F !important;
+      border-radius: 32px;
+      padding: clamp(24px, 5vw, 40px);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      max-width: 85vw;
+      width: 340px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .result-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 6px;
+      background: linear-gradient(90deg, #FF6B6B, #FFE66D, #4ECDC4, #A8E6CF, #FF8A5C) !important;
+    }
+
+    .result-emoji {
+      font-size: clamp(56px, 14vw, 88px);
+      line-height: 1;
+      margin-bottom: 6px;
+      animation: bounce 0.6s ease-in-out infinite alternate;
+      animation-delay: 0.3s;
+    }
+
+    .result-letter {
+      font-size: clamp(44px, 11vw, 64px);
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .result-word {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(22px, 5.5vw, 32px);
+      color: #5B4A3F !important;
+      font-weight: 700;
+    }
+
+    .result-sub {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(13px, 3.2vw, 18px);
+      color: #B0A090 !important;
+      margin-top: 2px;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .action-btn {
+      border: none;
+      border-radius: 50px;
+      padding: 11px 24px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(14px, 3.5vw, 20px);
+      cursor: pointer;
+      transition: transform 0.1s;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .action-btn:active {
+      transform: translateY(3px);
+    }
+
+    .btn-again {
+      background-color: #FFE66D !important;
+      color: #5B4A3F !important;
+      box-shadow: 0 4px 0 #E6CF50;
+    }
+
+    .btn-again:active {
+      box-shadow: 0 1px 0 #E6CF50;
+    }
+
+    .btn-trace {
+      background-color: #4ECDC4 !important;
+      color: #ffffff !important;
+      box-shadow: 0 4px 0 #3BA89F;
+    }
+
+    .btn-trace:active {
+      box-shadow: 0 1px 0 #3BA89F;
+    }
+
+    #traceScreen {
+      position: fixed;
+      inset: 0;
+      z-index: 200;
+      background-color: #FFF8E7 !important;
+      padding: 16px;
+    }
+
+    .trace-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 420px;
+      margin-bottom: 10px;
+    }
+
+    .trace-title {
+      font-size: clamp(18px, 4.5vw, 28px);
+      color: #5B4A3F !important;
+    }
+
+    .trace-title span {
+      font-size: clamp(22px, 5.5vw, 34px);
+    }
+
+    .trace-back-btn {
+      border: none;
+      border-radius: 50px;
+      padding: 8px 20px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(13px, 3.2vw, 18px);
+      background-color: #FF8A5C !important;
+      color: #fff !important;
+      box-shadow: 0 3px 0 #D06A40;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .trace-back-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 #D06A40;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 420px;
+      aspect-ratio: 1;
+      border-radius: 24px;
+      overflow: hidden;
+      background-color: #ffffff !important;
+      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    }
+
+    .canvas-wrap canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      touch-action: none;
+    }
+
+    #guideCanvas {
+      z-index: 1;
+    }
+
+    #drawCanvas {
+      z-index: 2;
+    }
+
+    .trace-btns {
+      display: flex;
+      gap: 10px;
+      margin-top: 14px;
+    }
+
+    .trace-clear-btn {
+      border: none;
+      border-radius: 50px;
+      padding: 10px 28px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(14px, 3.5vw, 20px);
+      background-color: #A78BFA !important;
+      color: #fff !important;
+      box-shadow: 0 4px 0 #8B6FD6;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .trace-clear-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #8B6FD6;
+    }
+
+    .trace-next-btn {
+      border: none;
+      border-radius: 50px;
+      padding: 10px 28px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(14px, 3.5vw, 20px);
+      background-color: #4ECDC4 !important;
+      color: #fff !important;
+      box-shadow: 0 4px 0 #3BA89F;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+    }
+
+    .trace-next-btn:active {
+      transform: translateY(3px);
+      box-shadow: 0 1px 0 #3BA89F;
+    }
+
+    .praise-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 300;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background-color: rgba(0, 0, 0, 0.2) !important;
+      backdrop-filter: blur(3px);
+      -webkit-backdrop-filter: blur(3px);
+    }
+
+    .praise-overlay.active {
+      display: flex;
+    }
+
+    .praise-card {
+      background-color: #ffffff !important;
+      border-radius: 32px;
+      padding: clamp(32px, 7vw, 56px);
+      text-align: center;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+      animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .praise-emoji {
+      font-size: clamp(60px, 15vw, 90px);
+      animation: bounce 0.5s ease-in-out infinite alternate;
+    }
+
+    .praise-text {
+      font-size: clamp(24px, 6vw, 40px);
+      color: #5B4A3F !important;
+      margin-top: 8px;
+    }
+
+    .praise-sub {
+      font-family: 'Gaegu', cursive;
+      font-size: clamp(16px, 4vw, 24px);
+      color: #9B8B7E !important;
+      margin-top: 4px;
+    }
+
+    .praise-tap {
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(15px, 3.5vw, 20px);
+      color: #FF8A5C !important;
+      margin-top: 20px;
+      animation: blink 1.5s infinite;
+      cursor: pointer;
+    }
+
+    .deco {
+      position: fixed;
+      pointer-events: none;
+      opacity: 0.15;
+      font-size: clamp(30px, 8vw, 50px);
+      z-index: 0;
+    }
+
+    .deco-1 {
+      top: 5%;
+      left: 5%;
+      animation: floatA 6s ease-in-out infinite;
+    }
+
+    .deco-2 {
+      top: 8%;
+      right: 8%;
+      animation: floatB 7s ease-in-out infinite;
+    }
+
+    .deco-3 {
+      bottom: 6%;
+      left: 10%;
+      animation: floatA 8s ease-in-out infinite;
+    }
+
+    .deco-4 {
+      bottom: 10%;
+      right: 6%;
+      animation: floatB 5s ease-in-out infinite;
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0)
+      }
+
+      to {
+        transform: translateY(-10px)
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 1;
+      }
+
+      50% {
+        opacity: 0.3;
+      }
+    }
+
+    @keyframes sparkleUp {
+      0% {
+        opacity: 1;
+        transform: translate(0, 0) scale(1)
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(var(--sx), var(--sy)) scale(0.3)
+      }
+    }
+
+    @keyframes floatA {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg)
+      }
+
+      50% {
+        transform: translateY(-15px) rotate(8deg)
+      }
+    }
+
+    @keyframes floatB {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg)
+      }
+
+      50% {
+        transform: translateY(10px) rotate(-6deg)
+      }
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-10px) rotate(0deg);
+        opacity: 1
+      }
+
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0
+      }
+    }
+
+    .confetti {
+      position: fixed;
+      top: -20px;
+      font-size: 24px;
+      z-index: 350;
+      pointer-events: none;
+      animation: confettiFall 2.5s ease-in forwards;
+    }
+
+    /* === NAV: 홈 버튼 + 언어 토글 === */
+    .gk-nav {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 9999;
+    }
+
+    .gk-nav-btn {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(13px, 3vw, 15px);
+      color: #5B4A3F;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .gk-nav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <meta name="theme-color" content="#FFF8E7">
+</head>
+
+<body style="background-color:#FFF8E7 !important;color:#5B4A3F !important;">
+  <div class="gk-nav">
+    <a class="gk-nav-btn" href="index.html">🏠 <span data-ko="홈" data-en="Home">홈</span></a>
+    <button class="gk-nav-btn" id="gkLangBtn" onclick="gkToggleLang()" style="display: none;">🇺🇸 EN</button>
+  </div>
+
+  <div class="deco deco-1">⭐</div>
+  <div class="deco deco-2">🌈</div>
+  <div class="deco deco-3">🎵</div>
+  <div class="deco deco-4">💫</div>
+
+  <div class="screen active" id="gridScreen">
+    <div class="header">
+      <h1 style="color:#5B4A3F;">ㄱㄴㄷ 터치놀이</h1>
+      <p style="color:#9B8B7E;">글자를 누르면 소리가 나와요!</p>
+    </div>
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="result-overlay" id="overlay">
+    <div class="result-card" style="background-color:#ffffff;color:#5B4A3F;">
+      <div class="result-emoji" id="resEmoji"></div>
+      <div class="result-letter" id="resLetter"></div>
+      <div class="result-word" id="resWord" style="color:#5B4A3F;"></div>
+      <div class="result-sub" id="resSub" style="color:#B0A090;"></div>
+      <div class="btn-row">
+        <button class="action-btn btn-again" id="btnAgain" style="background-color:#FFE66D;color:#5B4A3F;"
+          data-ko="또 하기! 🎉" data-en="Again! 🎉">또 하기! 🎉</button>
+        <button class="action-btn btn-trace" id="btnTrace" style="background-color:#4ECDC4;color:#fff;">따라쓰기 ✏️</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="screen" id="traceScreen" style="background-color:#FFF8E7 !important;">
+    <div class="trace-header">
+      <div class="trace-title" id="traceTitle" style="color:#5B4A3F;"></div>
+      <button class="trace-back-btn" id="traceBackBtn" style="background-color:#FF8A5C;color:#fff;" data-ko="돌아가기"
+        data-en="Back">돌아가기</button>
+    </div>
+    <div class="canvas-wrap" id="canvasWrap" style="background-color:#ffffff;">
+      <canvas id="guideCanvas"></canvas>
+      <canvas id="drawCanvas"></canvas>
+    </div>
+    <div class="trace-btns">
+      <button class="trace-clear-btn" id="traceClearBtn" style="background-color:#A78BFA;color:#fff;">지우기 🧹</button>
+      <button class="trace-next-btn" id="traceNextBtn" style="background-color:#4ECDC4;color:#fff;" data-ko="다했어요! ⭐"
+        data-en="Done! ⭐">다했어요! ⭐</button>
+    </div>
+  </div>
+
+  <div class="praise-overlay" id="praiseOverlay">
+    <div class="praise-card" style="background-color:#ffffff;">
+      <div class="praise-emoji" id="praiseEmoji"></div>
+      <div class="praise-text" id="praiseText" style="color:#5B4A3F;"></div>
+      <div class="praise-sub" id="praiseSub" style="color:#9B8B7E;"></div>
+      <div class="praise-tap" id="praiseTap" style="color:#FF8A5C;" data-ko="화면을 터치해서 넘어가요 👉"
+        data-en="Tap to continue 👉">화면을 터치해서 넘어가요 👉</div>
+    </div>
+  </div>
+
+  <script>
+    const DATA = [
+      { letter: 'ㄱ', word: '기차', emoji: '🚂', color: '#FF6B6B', sound: '치카치카 기차!' },
+      { letter: 'ㄴ', word: '나비', emoji: '🦋', color: '#A78BFA', sound: '팔랑팔랑 나비!' },
+      { letter: 'ㄷ', word: '도넛', emoji: '🍩', color: '#F59E0B', sound: '맛있는 도넛!' },
+      { letter: 'ㄹ', word: '로봇', emoji: '🤖', color: '#6EE7B7', sound: '삐빅 로봇!' },
+      { letter: 'ㅁ', word: '멜론', emoji: '🍈', color: '#34D399', sound: '달콤한 멜론!' },
+      { letter: 'ㅂ', word: '별', emoji: '⭐', color: '#FBBF24', sound: '반짝반짝 별!' },
+      { letter: 'ㅅ', word: '사자', emoji: '🦁', color: '#FB923C', sound: '어흥! 사자!' },
+      { letter: 'ㅇ', word: '오리', emoji: '🦆', color: '#38BDF8', sound: '꽥꽥 오리!' },
+      { letter: 'ㅈ', word: '자동차', emoji: '🚗', color: '#F472B6', sound: '부릉부릉 자동차!' },
+      { letter: 'ㅊ', word: '치즈', emoji: '🧀', color: '#FCD34D', sound: '냠냠 치즈!' },
+      { letter: 'ㅋ', word: '코끼리', emoji: '🐘', color: '#94A3B8', sound: '뿌우 코끼리!' },
+      { letter: 'ㅌ', word: '토끼', emoji: '🐰', color: '#FDA4AF', sound: '깡충깡충 토끼!' },
+      { letter: 'ㅍ', word: '포도', emoji: '🍇', color: '#C084FC', sound: '새콤달콤 포도!' },
+      { letter: 'ㅎ', word: '하마', emoji: '🦛', color: '#67E8F9', sound: '하품하는 하마!' },
+    ];
+
+    const PRAISES = [
+      { emoji: '🎉', text: '잘했어요!', sub: '정말 멋지게 썼어요!' },
+      { emoji: '🌟', text: '최고예요!', sub: '아주 잘 따라 썼어요!' },
+      { emoji: '👏', text: '대단해요!', sub: '글씨가 너무 예뻐요!' },
+      { emoji: '🏆', text: '훌륭해요!', sub: '천재 아니에요?' },
+      { emoji: '💪', text: '멋져요!', sub: '정말 잘했어요!' },
+    ];
+
+    let currentItem = null;
+    let drawAbort = null; // AbortController for draw listeners
+    let isDrawing = false;
+
+    // DOM refs
+    const grid = document.getElementById('grid');
+    const overlay = document.getElementById('overlay');
+    const resEmoji = document.getElementById('resEmoji');
+    const resLetter = document.getElementById('resLetter');
+    const resWord = document.getElementById('resWord');
+    const resSub = document.getElementById('resSub');
+    const btnAgain = document.getElementById('btnAgain');
+    const btnTrace = document.getElementById('btnTrace');
+    const gridScreen = document.getElementById('gridScreen');
+    const traceScreen = document.getElementById('traceScreen');
+    const traceTitle = document.getElementById('traceTitle');
+    const canvasWrap = document.getElementById('canvasWrap');
+    const guideCanvas = document.getElementById('guideCanvas');
+    const drawCanvas = document.getElementById('drawCanvas');
+    const guideCtx = guideCanvas.getContext('2d');
+    const drawCtx = drawCanvas.getContext('2d');
+    const praiseOverlay = document.getElementById('praiseOverlay');
+    const praiseEmoji = document.getElementById('praiseEmoji');
+    const praiseText = document.getElementById('praiseText');
+    const praiseSub = document.getElementById('praiseSub');
+    const praiseTap = document.getElementById('praiseTap');
+
+    // ── BUILD GRID ──
+    DATA.forEach((item, i) => {
+      const btn = document.createElement('button');
+      btn.className = 'letter-btn';
+      const dk = adjustColor(item.color, -20);
+      btn.setAttribute('style', `background:linear-gradient(135deg,${item.color},${dk}) !important;color:#ffffff !important;animation-delay:${i * 0.04}s;`);
+      btn.textContent = item.letter;
+      btn.addEventListener('pointerdown', (e) => { e.preventDefault(); handleTap(item, btn); });
+      grid.appendChild(btn);
+    });
+
+    // ── TAP ──
+    function handleTap(item, btn) {
+      currentItem = item;
+      for (let i = 0; i < 5; i++) {
+        const sp = document.createElement('span');
+        sp.className = 'sparkle';
+        sp.textContent = ['✨', '⭐', '💫', '🌟', '🎵'][i];
+        sp.style.setProperty('--sx', (Math.random() - 0.5) * 80 + 'px');
+        sp.style.setProperty('--sy', (-30 - Math.random() * 50) + 'px');
+        sp.style.left = (20 + Math.random() * 60) + '%';
+        sp.style.top = (20 + Math.random() * 40) + '%';
+        btn.appendChild(sp);
+        setTimeout(() => sp.remove(), 700);
+      }
+
+      const _idx = DATA.indexOf(item);
+      playAudio('audio/hangul/combined-' + _idx + '.mp3', item.letter + ' ' + item.sound);
+
+      setTimeout(() => {
+        resEmoji.textContent = item.emoji;
+        resLetter.textContent = item.letter;
+        resLetter.style.color = item.color;
+        resWord.textContent = item.word;
+        resSub.textContent = item.sound;
+        overlay.classList.add('active');
+      }, 400);
+    }
+
+    // ── RESULT BUTTONS ──
+    btnAgain.addEventListener('pointerdown', (e) => { e.preventDefault(); stopAllAudio(); overlay.classList.remove('active'); });
+    overlay.addEventListener('pointerdown', (e) => { if (e.target === overlay) overlay.classList.remove('active'); });
+    btnTrace.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      overlay.classList.remove('active');
+      openTrace(currentItem);
+    });
+
+    // ── TRACE ──
+    function openTrace(item) {
+      currentItem = item;
+      gridScreen.classList.remove('active');
+      traceScreen.classList.add('active');
+      traceTitle.innerHTML = `<span style="color:${item.color}">${item.letter}</span> 따라쓰기 ✏️`;
+      playAudio('audio/hangul/trace-' + DATA.indexOf(item) + '.mp3', item.letter + ' 따라 써 보세요!');
+      setTimeout(() => setupCanvas(item), 80);
+    }
+
+    function setupCanvas(item) {
+      const rect = canvasWrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const w = rect.width;
+      const h = rect.height;
+
+      // Size both canvases
+      guideCanvas.width = w * dpr;
+      guideCanvas.height = h * dpr;
+      guideCanvas.style.width = w + 'px';
+      guideCanvas.style.height = h + 'px';
+
+      drawCanvas.width = w * dpr;
+      drawCanvas.height = h * dpr;
+      drawCanvas.style.width = w + 'px';
+      drawCanvas.style.height = h + 'px';
+
+      // Guide
+      guideCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      guideCtx.clearRect(0, 0, w, h);
+
+      // Grid lines
+      guideCtx.strokeStyle = '#E8E0D4';
+      guideCtx.lineWidth = 1;
+      guideCtx.setLineDash([6, 6]);
+      guideCtx.beginPath();
+      guideCtx.moveTo(w / 2, 0); guideCtx.lineTo(w / 2, h);
+      guideCtx.moveTo(0, h / 2); guideCtx.lineTo(w, h / 2);
+      guideCtx.stroke();
+      guideCtx.setLineDash([]);
+
+      // Border
+      guideCtx.strokeStyle = '#D4C8B8';
+      guideCtx.lineWidth = 3;
+      guideCtx.strokeRect(4, 4, w - 8, h - 8);
+
+      // Guide letter
+      const fontSize = Math.min(w, h) * 0.7;
+      guideCtx.font = `bold ${fontSize}px 'Jua', sans-serif`;
+      guideCtx.textAlign = 'center';
+      guideCtx.textBaseline = 'middle';
+
+      // Dotted outline
+      guideCtx.strokeStyle = item.color + '40';
+      guideCtx.lineWidth = 3;
+      guideCtx.setLineDash([8, 8]);
+      guideCtx.strokeText(item.letter, w / 2, h / 2);
+      guideCtx.setLineDash([]);
+
+      // Faint fill
+      guideCtx.fillStyle = item.color + '15';
+      guideCtx.fillText(item.letter, w / 2, h / 2);
+
+      // Draw canvas setup
+      drawCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      drawCtx.clearRect(0, 0, w, h);
+
+      // Remove old listeners
+      if (drawAbort) drawAbort.abort();
+      drawAbort = new AbortController();
+      const signal = drawAbort.signal;
+
+      const lineW = Math.max(16, w * 0.05);
+
+      function getPos(e) {
+        const r = drawCanvas.getBoundingClientRect();
+        return { x: e.clientX - r.left, y: e.clientY - r.top };
+      }
+
+      drawCanvas.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        isDrawing = true;
+        const p = getPos(e);
+        drawCtx.beginPath();
+        drawCtx.moveTo(p.x, p.y);
+        drawCtx.lineCap = 'round';
+        drawCtx.lineJoin = 'round';
+        drawCtx.lineWidth = lineW;
+        drawCtx.strokeStyle = item.color;
+      }, { signal });
+
+      drawCanvas.addEventListener('pointermove', (e) => {
+        if (!isDrawing) return;
+        e.preventDefault();
+        const p = getPos(e);
+        drawCtx.lineTo(p.x, p.y);
+        drawCtx.stroke();
+        drawCtx.beginPath();
+        drawCtx.moveTo(p.x, p.y);
+      }, { signal });
+
+      drawCanvas.addEventListener('pointerup', (e) => { e.preventDefault(); isDrawing = false; }, { signal });
+      drawCanvas.addEventListener('pointercancel', () => { isDrawing = false; }, { signal });
+      drawCanvas.addEventListener('pointerleave', () => { isDrawing = false; }, { signal });
+    }
+
+    // ── TRACE BUTTONS ──
+    document.getElementById('traceClearBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const dpr = window.devicePixelRatio || 1;
+      drawCtx.clearRect(0, 0, drawCanvas.width / dpr, drawCanvas.height / dpr);
+      playAudio('audio/common/again.mp3', '다시 써 보세요!');
+    });
+
+    function checkCoverage(item) {
+      const rect = canvasWrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      const wCanvas = guideCanvas.width;
+      const hCanvas = guideCanvas.height;
+
+      const offCanvas = document.createElement('canvas');
+      offCanvas.width = wCanvas;
+      offCanvas.height = hCanvas;
+      const offCtx = offCanvas.getContext('2d');
+
+      offCtx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      const logicalW = wCanvas / dpr;
+      const logicalH = hCanvas / dpr;
+
+      const fontSize = Math.min(logicalW, logicalH) * 0.7;
+      offCtx.font = `bold ${fontSize}px 'Jua', sans-serif`;
+      offCtx.textAlign = 'center';
+      offCtx.textBaseline = 'middle';
+      offCtx.lineWidth = 3;
+      offCtx.fillStyle = '#000';
+      offCtx.fillText(item.letter, logicalW / 2, logicalH / 2);
+      offCtx.strokeStyle = '#000';
+      offCtx.strokeText(item.letter, logicalW / 2, logicalH / 2);
+
+      const maskData = offCtx.getImageData(0, 0, wCanvas, hCanvas).data;
+      const drawData = drawCtx.getImageData(0, 0, wCanvas, hCanvas).data;
+
+      let targetPixels = 0;
+      let filledPixels = 0;
+
+      for (let i = 0; i < maskData.length; i += 4) {
+        if (maskData[i + 3] > 50) {
+          targetPixels++;
+          if (drawData[i + 3] > 10) {
+            filledPixels++;
+          }
+        }
+      }
+
+      if (targetPixels === 0) return 1;
+      return filledPixels / targetPixels;
+    }
+
+    document.getElementById('traceNextBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const coverage = checkCoverage(currentItem);
+      if (coverage >= 0.3) {
+        showPraise(true);
+      } else {
+        showPraise(false);
+      }
+    });
+
+    document.getElementById('traceBackBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      stopAllAudio();
+      if (drawAbort) drawAbort.abort();
+      traceScreen.classList.remove('active');
+      gridScreen.classList.add('active');
+    });
+
+    // ── PRAISE ──
+    let praiseCallback = null;
+    praiseOverlay.addEventListener('pointerdown', (e) => {
+      if (praiseCallback) {
+        const cb = praiseCallback;
+        praiseCallback = null;
+        cb();
+      }
+    });
+
+    function showPraise(isSuccess) {
+      if (isSuccess) {
+        const p = PRAISES[Math.floor(Math.random() * PRAISES.length)];
+        praiseEmoji.textContent = p.emoji;
+        praiseText.textContent = p.text;
+        praiseSub.textContent = p.sub;
+
+        const isEn = document.documentElement.lang === 'en';
+        praiseTap.textContent = isEn ? "Tap to continue 👉" : "화면을 터치해서 넘어가요 👉";
+        praiseTap.style.display = 'block';
+
+        praiseOverlay.classList.add('active');
+        playAudio('audio/hangul/praise-' + PRAISES.indexOf(p) + '.mp3', p.text + ' ' + p.sub);
+        spawnConfetti();
+
+        praiseCallback = () => {
+          praiseOverlay.classList.remove('active');
+          const idx = DATA.indexOf(currentItem);
+          const nextIdx = (idx + 1) % DATA.length;
+          currentItem = DATA[nextIdx];
+          openTrace(currentItem);
+        };
+      } else {
+        praiseEmoji.textContent = '🤔';
+
+        const isEn = document.documentElement.lang === 'en';
+        praiseText.textContent = isEn ? "Try again!" : "다시 해보세요!";
+        praiseSub.textContent = isEn ? "Color more of the letter!" : "글자를 더 많이 칠해주세요!";
+        praiseTap.textContent = isEn ? "Tap to try again 🔄" : "화면을 터치해서 다시하기 🔄";
+        praiseTap.style.display = 'block';
+
+        praiseOverlay.classList.add('active');
+        playAudio('audio/common/again.mp3', isEn ? "Try again!" : "다시 해보세요!");
+
+        praiseCallback = () => {
+          praiseOverlay.classList.remove('active');
+          const dpr = window.devicePixelRatio || 1;
+          drawCtx.clearRect(0, 0, drawCanvas.width / dpr, drawCanvas.height / dpr);
+        };
+      }
+    }
+
+    function spawnConfetti() {
+      const emojis = ['🎉', '⭐', '🌈', '💫', '🎊', '🌟', '✨', '🎵', '❤️', '🦋'];
+      for (let i = 0; i < 20; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.animationDelay = Math.random() * 0.8 + 's';
+        c.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3500);
+      }
+    }
+
+    // ── TTS ──
+    function speak(text) {
+      if (!('speechSynthesis' in window)) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = 'ko-KR'; u.rate = 0.85; u.pitch = 1.3;
+      const v = window.speechSynthesis.getVoices().find(v => v.lang.startsWith('ko'));
+      if (v) u.voice = v;
+      window.speechSynthesis.speak(u);
+    }
+    let _curAudio = null;
+    function stopAllAudio() {
+      if (_curAudio) { _curAudio.pause(); _curAudio = null; }
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    }
+    function playAudio(src, fallback) {
+      stopAllAudio();
+      const a = new Audio(src);
+      _curAudio = a;
+      a.onerror = () => speak(fallback);
+      a.play().catch(() => speak(fallback));
+    }
+    if ('speechSynthesis' in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
+
+    function adjustColor(hex, amt) {
+      hex = hex.replace('#', '');
+      const r = Math.max(0, Math.min(255, parseInt(hex.substr(0, 2), 16) + amt));
+      const g = Math.max(0, Math.min(255, parseInt(hex.substr(2, 2), 16) + amt));
+      const b = Math.max(0, Math.min(255, parseInt(hex.substr(4, 2), 16) + amt));
+      return '#' + r.toString(16).padStart(2, '0') + g.toString(16).padStart(2, '0') + b.toString(16).padStart(2, '0');
+    }
+    // ===== GK LANG + PWA =====
+    (function () { function gkSet(lang) { localStorage.setItem('gk-lang', lang); document.documentElement.lang = lang; document.querySelectorAll('[data-ko]').forEach(function (el) { el.textContent = lang === 'en' ? el.dataset.en : el.dataset.ko; }); var b = document.getElementById('gkLangBtn'); if (b) b.textContent = lang === 'en' ? '🇰🇷 KO' : '🇺🇸 EN'; } window.gkToggleLang = function () { gkSet((localStorage.getItem('gk-lang') || 'ko') === 'ko' ? 'en' : 'ko'); }; gkSet(localStorage.getItem('gk-lang') || 'ko'); })();
+    if ('serviceWorker' in navigator) { navigator.serviceWorker.register('/service-worker.js'); }
+  </script>
+</body>
+
+</html>

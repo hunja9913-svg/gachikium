@@ -1,0 +1,1225 @@
+﻿<!DOCTYPE html>
+<html lang="ko">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="color-scheme" content="light only">
+  <title>가치키움 🌱 - 힌트 퀴즈</title>
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      color-scheme: light only !important;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+    }
+
+    html,
+    body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    body {
+      font-family: 'Jua', sans-serif;
+      touch-action: none;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background:
+        radial-gradient(circle at 15% 15%, rgba(255, 235, 200, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 85% 85%, rgba(200, 240, 220, 0.4) 0%, transparent 40%),
+        radial-gradient(circle at 50% 50%, rgba(255, 220, 220, 0.3) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .screen {
+      position: absolute;
+      inset: 0;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .screen.active {
+      display: flex;
+    }
+
+    /* === START SCREEN === */
+    .start-card {
+      padding: 40px;
+      border-radius: 32px;
+      box-shadow: 0 12px 0 rgba(0, 0, 0, 0.08), 0 4px 24px rgba(0, 0, 0, 0.06);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .start-emoji {
+      font-size: clamp(60px, 15vw, 80px);
+      line-height: 1;
+      filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.1));
+      animation: bounce 2s ease-in-out infinite alternate;
+    }
+
+    .start-title {
+      font-size: clamp(28px, 7vw, 36px);
+      line-height: 1.2;
+    }
+
+    .start-desc {
+      font-size: clamp(16px, 4vw, 20px);
+      line-height: 1.4;
+      opacity: 0.8;
+      word-break: keep-all;
+    }
+
+    /* === GAME SCREEN === */
+    .top-bar {
+      position: absolute;
+      top: env(safe-area-inset-top, 20px);
+      left: 20px;
+      right: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 20;
+    }
+
+    /* === UI CATEGORY GRID === */
+    .category-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin: 10px 0;
+      width: 100%;
+    }
+
+    .cat-btn {
+      background: #ffffff;
+      border: 3px solid #E8E0D4;
+      border-radius: 16px;
+      padding: 14px 10px;
+      font-family: inherit;
+      font-size: clamp(16px, 4vw, 20px);
+      color: #A09080;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
+      opacity: 0.6;
+      filter: grayscale(1);
+    }
+
+    .cat-btn.active {
+      background: #FFF9E6;
+      border-color: #FFCA28;
+      color: #5B4040;
+      opacity: 1;
+      filter: grayscale(0);
+      box-shadow: 0 6px 0 rgba(255, 202, 40, 0.3);
+      transform: translateY(-2px);
+    }
+
+    .cat-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+    }
+
+    .cat-btn.active:active {
+      box-shadow: 0 2px 0 rgba(255, 202, 40, 0.3);
+    }
+
+    .cat-all-btn {
+      background: #F4F1ED;
+      border: 2px solid #E8E0D4;
+      border-radius: 20px;
+      padding: 8px 16px;
+      font-family: inherit;
+      font-size: clamp(14px, 3vw, 16px);
+      color: #A09080;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 5px;
+      transition: all 0.2s;
+      opacity: 0.6;
+    }
+
+    .cat-all-btn.active {
+      background: #E8FFF8;
+      border-color: #4ECDC4;
+      color: #3B9B94;
+      opacity: 1;
+    }
+
+    /* === SNOW SPARKLE on correct answer === */
+    @keyframes snowFall {
+      0% {
+        transform: translateY(-20px) translateX(0) rotate(0deg);
+        opacity: 1;
+      }
+
+      100% {
+        transform: translateY(110vh) translateX(var(--drift)) rotate(720deg);
+        opacity: 0;
+      }
+    }
+
+    .snow-sparkle {
+      position: fixed;
+      top: -30px;
+      font-size: 22px;
+      z-index: 400;
+      pointer-events: none;
+      animation: snowFall var(--duration) ease-in forwards;
+    }
+
+    /* === SCENE: QUIZ === */
+
+    .top-bar-space {
+      width: 100%;
+      height: 60px;
+      flex-shrink: 0;
+    }
+
+    .progress-container {
+      width: 120px;
+      height: 12px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 6px;
+      overflow: hidden;
+      margin-left: auto;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #FFB070, #FFD080);
+      width: 0%;
+      transition: width 0.4s ease;
+      border-radius: 6px;
+    }
+
+    .quiz-progress {
+      font-size: 18px;
+      color: #908070;
+      margin-top: 4px;
+      text-align: right;
+    }
+
+    .hint-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      width: 100%;
+      max-width: 600px;
+      padding: 10px;
+      margin-top: 20px;
+      margin-bottom: 40px;
+    }
+
+    .hint-box {
+      width: 100%;
+      min-height: 160px;
+      padding: 30px 20px;
+      border-radius: 28px;
+      background: #ffffff;
+      box-shadow: 0 8px 0 rgba(0, 0, 0, 0.06), 0 4px 16px rgba(0, 0, 0, 0.04);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      animation: popIn 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      position: relative;
+    }
+
+    .hint-text {
+      font-size: clamp(22px, 5.5vw, 32px);
+      line-height: 1.4;
+      color: #5B4040;
+      word-break: keep-all;
+    }
+
+    .hint-replay {
+      position: absolute;
+      bottom: -15px;
+      background: #FFE082;
+      border: 3px solid #FFCA28;
+      border-radius: 50%;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+      box-shadow: 0 4px 0 rgba(200, 150, 0, 0.2);
+      cursor: pointer;
+      z-index: 5;
+    }
+
+    .hint-replay:active {
+      transform: translateY(2px);
+      box-shadow: 0 2px 0 rgba(200, 150, 0, 0.2);
+    }
+
+    .choices {
+      width: 100%;
+      max-width: 600px;
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+      gap: 12px;
+      padding-bottom: env(safe-area-inset-bottom, 20px);
+      animation: dropIn 0.6s 0.2s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .choice-btn {
+      flex: 1;
+      background: #ffffff;
+      border: 3px solid #F0E0D8;
+      border-radius: 24px;
+      padding: 20px 10px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 6px 0 rgba(0, 0, 0, 0.08);
+      cursor: pointer;
+      font-family: inherit;
+      transition: all 0.1s;
+      min-height: 140px;
+      justify-content: center;
+    }
+
+    .choice-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(0, 0, 0, 0.08);
+    }
+
+    .choice-btn span:first-child {
+      font-size: clamp(40px, 10vw, 56px);
+      line-height: 1;
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.1));
+    }
+
+    .choice-name {
+      font-size: clamp(16px, 4vw, 20px);
+      color: #807060;
+    }
+
+    .choice-btn.correct {
+      background: #E8FFF8 !important;
+      border-color: #4ECDC4 !important;
+      animation: correctPop 0.5s ease;
+    }
+
+    .choice-btn.wrong {
+      background: #FFF0F0 !important;
+      border-color: #FF6B6B !important;
+      animation: wrongShake 0.4s ease;
+      opacity: 0.5;
+    }
+
+    /* === RESULT SCREEN === */
+    .result-card {
+      background: #ffffff;
+      padding: 40px;
+      border-radius: 32px;
+      box-shadow: 0 12px 0 rgba(0, 0, 0, 0.08), 0 4px 24px rgba(0, 0, 0, 0.06);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      animation: dropIn 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+      z-index: 100;
+    }
+
+    .result-emoji {
+      font-size: clamp(70px, 18vw, 90px);
+      line-height: 1;
+      animation: popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    }
+
+    .result-title {
+      font-size: clamp(32px, 8vw, 40px);
+      color: #FF8A65;
+      line-height: 1.2;
+    }
+
+    .result-score {
+      font-size: clamp(24px, 6vw, 28px);
+      background: #FFF5E6;
+      padding: 12px 24px;
+      border-radius: 50px;
+      display: inline-block;
+      margin: 0 auto;
+      color: #D84315;
+    }
+
+    .result-sub {
+      font-size: 18px;
+      color: #8D6E63;
+    }
+
+    /* === BUTTONS === */
+    .btn {
+      background: linear-gradient(135deg, #FFB070, #FF8A65);
+      color: white;
+      border: none;
+      border-radius: 50px;
+      padding: 16px 32px;
+      font-size: clamp(20px, 5vw, 24px);
+      font-family: inherit;
+      box-shadow: 0 6px 0 rgba(200, 80, 50, 0.3), 0 4px 12px rgba(255, 138, 101, 0.3);
+      cursor: pointer;
+      transition: all 0.1s;
+    }
+
+    .btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 2px 0 rgba(200, 80, 50, 0.3);
+    }
+
+    /* === FEEDBACK OVERLAY === */
+    .feedback-overlay {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 300;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .feedback-overlay.active {
+      opacity: 1;
+    }
+
+    .feedback-inner {
+      font-size: clamp(100px, 30vw, 150px);
+      filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+    }
+
+    .feedback-overlay.active .feedback-inner {
+      animation: feedbackPop 0.8s ease-out both;
+    }
+
+    .deco {
+      position: fixed;
+      pointer-events: none;
+      opacity: 0.12;
+      font-size: clamp(30px, 8vw, 50px);
+      z-index: 0;
+    }
+
+    .deco-1 {
+      top: 5%;
+      left: 5%;
+      animation: floatA 6s ease-in-out infinite;
+    }
+
+    .deco-2 {
+      top: 8%;
+      right: 8%;
+      animation: floatB 7s ease-in-out infinite;
+    }
+
+    .deco-3 {
+      bottom: 6%;
+      left: 10%;
+      animation: floatA 8s ease-in-out infinite;
+    }
+
+    .deco-4 {
+      bottom: 10%;
+      right: 6%;
+      animation: floatB 5s ease-in-out infinite;
+    }
+
+    @keyframes dropIn {
+      from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.9)
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+      }
+    }
+
+    @keyframes popIn {
+      from {
+        opacity: 0;
+        transform: scale(0.5)
+      }
+
+      to {
+        opacity: 1;
+        transform: scale(1)
+      }
+    }
+
+    @keyframes bounce {
+      from {
+        transform: translateY(0)
+      }
+
+      to {
+        transform: translateY(-10px)
+      }
+    }
+
+    @keyframes floatA {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg)
+      }
+
+      50% {
+        transform: translateY(-15px) rotate(8deg)
+      }
+    }
+
+    @keyframes floatB {
+
+      0%,
+      100% {
+        transform: translateY(0) rotate(0deg)
+      }
+
+      50% {
+        transform: translateY(10px) rotate(-6deg)
+      }
+    }
+
+    @keyframes correctPop {
+      0% {
+        transform: scale(1)
+      }
+
+      50% {
+        transform: scale(1.15)
+      }
+
+      100% {
+        transform: scale(1.05)
+      }
+    }
+
+    @keyframes wrongShake {
+      0% {
+        transform: translateX(0)
+      }
+
+      25% {
+        transform: translateX(-8px)
+      }
+
+      50% {
+        transform: translateX(8px)
+      }
+
+      75% {
+        transform: translateX(-4px)
+      }
+
+      100% {
+        transform: translateX(0)
+      }
+    }
+
+    @keyframes feedbackPop {
+      0% {
+        opacity: 0;
+        transform: scale(0.3)
+      }
+
+      40% {
+        opacity: 1;
+        transform: scale(1.2)
+      }
+
+      100% {
+        opacity: 0;
+        transform: scale(1.5) translateY(-30px)
+      }
+    }
+
+    @keyframes confettiFall {
+      0% {
+        transform: translateY(-10px) rotate(0deg);
+        opacity: 1
+      }
+
+      100% {
+        transform: translateY(100vh) rotate(720deg);
+        opacity: 0
+      }
+    }
+
+    .confetti {
+      position: fixed;
+      top: -20px;
+      font-size: 24px;
+      z-index: 350;
+      pointer-events: none;
+      animation: confettiFall 2.5s ease-in forwards;
+    }
+
+    /* === NAV: 홈 버튼 + 언어 토글 === */
+    .gk-nav {
+      position: fixed;
+      top: 12px;
+      left: 12px;
+      display: flex;
+      gap: 8px;
+      z-index: 9999;
+    }
+
+    .gk-nav-btn {
+      background: rgba(255, 255, 255, 0.88);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 2px solid rgba(0, 0, 0, 0.08);
+      border-radius: 50px;
+      padding: 8px 14px;
+      font-family: 'Jua', sans-serif;
+      font-size: clamp(13px, 3vw, 15px);
+      color: #5B4040;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+      -webkit-tap-highlight-color: transparent;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+
+    .gk-nav-btn:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
+    }
+  </style>
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icons/icon-192.svg">
+  <meta name="theme-color" content="#FFF5EE">
+</head>
+
+<body style="background-color:#FFF5EE !important;color:#5B4040 !important;">
+  <div class="gk-nav">
+    <a class="gk-nav-btn" href="index.html">🏠 <span data-ko="홈" data-en="Home">홈</span></a>
+    <button class="gk-nav-btn" id="gkLangBtn" onclick="gkToggleLang()" style="display: none;">🇺🇸 EN</button>
+  </div>
+
+  <div class="deco deco-1">💡</div>
+  <div class="deco deco-2">🌟</div>
+  <div class="deco deco-3">🎯</div>
+  <div class="deco deco-4">🔍</div>
+
+  <div class="screen active" id="startScreen">
+    <div class="start-card" style="background-color:#ffffff;">
+      <div class="start-emoji">💡</div>
+      <div class="start-title" style="color:#5B4040;" data-ko="힌트 퀴즈" data-en="Hint Quiz">힌트 퀴즈</div>
+      <div class="start-desc" style="color:#807060;" data-ko="퀴즈 주제를 골라주세요!" data-en="Choose your quiz topics!">퀴즈 주제를
+        골라주세요!</div>
+
+      <div class="category-grid" id="categoryGrid">
+        <button class="cat-btn active" data-cat="food">🍎 달콤한 먹거리</button>
+        <button class="cat-btn active" data-cat="animals">🦁 동물 친구들</button>
+        <button class="cat-btn active" data-cat="vehicles">🚒 씽씽 탈것</button>
+        <button class="cat-btn active" data-cat="town">🏡 우리 동네</button>
+      </div>
+
+      <button class="cat-all-btn active" id="catAllBtn">✅ 모두 섞어서</button>
+
+      <button class="btn" id="startBtn" style="margin-top: 15px;" data-ko="시작하기 🚀" data-en="Start 🚀">시작하기 🚀</button>
+    </div>
+  </div>
+
+  <div class="screen" id="quizScreen">
+    <div class="top-bar-space"></div>
+    <div class="top-bar">
+      <div></div>
+      <div>
+        <div class="progress-container">
+          <div class="progress-bar" id="progressBar"></div>
+        </div>
+        <div class="quiz-progress" id="quizProgress">1 / 10</div>
+      </div>
+    </div>
+
+    <div class="hint-container">
+      <div class="hint-box">
+        <div class="hint-text" id="hintText"></div>
+        <div class="hint-replay" id="hintReplay" style="visibility:hidden;">🔊</div>
+      </div>
+    </div>
+
+    <div class="choices" id="choices" style="visibility:hidden;"></div>
+  </div>
+
+  <div class="screen" id="resultScreen">
+    <div class="result-card">
+      <div class="result-emoji" id="resultEmoji">🏆</div>
+      <div class="result-title" id="resultTitle">완벽해요!</div>
+      <div class="result-score" id="resultScore">10 / 10 맞았어요!</div>
+      <div class="result-sub" id="resultSub">힌트 박사님이네요!</div>
+      <button class="btn" id="resultBtn" data-ko="다시 하기 🔄" data-en="Play Again 🔄">다시 하기 🔄</button>
+    </div>
+  </div>
+
+  <div class="feedback-overlay" id="feedback">
+    <div class="feedback-inner" id="feedbackInner">⭕</div>
+  </div>
+
+  <script>
+    const ALL_ITEMS = [
+      { id: 'apple', cat: 'food', name: '사과', en: 'Apple', emoji: '🍎', hint: '빨갛고 달콤해요. 백설공주가 먹었어요!' },
+      { id: 'banana', cat: 'food', name: '바나나', en: 'Banana', emoji: '🍌', hint: '노랗고 길쭉해요. 원숭이가 좋아해요!' },
+      { id: 'watermelon', cat: 'food', name: '수박', en: 'Watermelon', emoji: '🍉', hint: '초록 줄무늬 옷을 입고 있어요. 속은 빨갛고 씨가 있어요!' },
+      { id: 'strawberry', cat: 'food', name: '딸기', en: 'Strawberry', emoji: '🍓', hint: '빨갛고 작아요. 위에 초록 모자를 쓰고 있어요!' },
+      { id: 'grape', cat: 'food', name: '포도', en: 'Grape', emoji: '🍇', hint: '보라색 알갱이가 송이송이 달려있어요!' },
+      { id: 'orange', cat: 'food', name: '오렌지', en: 'Orange', emoji: '🍊', hint: '둥글고 주황색이에요. 즙이 많아서 주스로 만들어요!' },
+      { id: 'cherry', cat: 'food', name: '체리', en: 'Cherry', emoji: '🍒', hint: '빨간 쌍둥이 열매예요. 꼭지가 길어요!' },
+      { id: 'pineapple', cat: 'food', name: '파인애플', en: 'Pineapple', emoji: '🍍', hint: '울퉁불퉁한 갈색 옷에 초록 왕관을 쓰고 있어요!' },
+      { id: 'peach', cat: 'food', name: '복숭아', en: 'Peach', emoji: '🍑', hint: '분홍빛이 나고 보드라운 솜털이 있어요. 달콤해요!' },
+      { id: 'lemon', cat: 'food', name: '레몬', en: 'Lemon', emoji: '🍋', hint: '노랗고 정말 시큼해요! 얼굴이 찡그려져요!' },
+
+      { id: 'dog', cat: 'animals', name: '강아지', en: 'Dog', emoji: '🐶', hint: '멍멍 짖어요! 꼬리를 살랑살랑 흔들어요!' },
+      { id: 'cat', cat: 'animals', name: '고양이', en: 'Cat', emoji: '🐱', hint: '야옹 하고 울어요. 그루밍을 좋아해요!' },
+      { id: 'rabbit', cat: 'animals', name: '토끼', en: 'Rabbit', emoji: '🐰', hint: '귀가 길고 깡충깡충 뛰어요. 당근을 좋아해요!' },
+      { id: 'elephant', cat: 'animals', name: '코끼리', en: 'Elephant', emoji: '🐘', hint: '코가 아주 길어요. 동물원에서 제일 커요! 뿌우!' },
+      { id: 'lion', cat: 'animals', name: '사자', en: 'Lion', emoji: '🦁', hint: '갈기가 멋있어요. 동물의 왕이에요! 어흥!' },
+      { id: 'giraffe', cat: 'animals', name: '기린', en: 'Giraffe', emoji: '🦒', hint: '목이 아주 길어서 높은 나무 잎도 먹을 수 있어요!' },
+      { id: 'penguin', cat: 'animals', name: '펭귄', en: 'Penguin', emoji: '🐧', hint: '까만 턱시도를 입고 뒤뚱뒤뚱 걸어요. 추운 곳에 살아요!' },
+      { id: 'dolphin', cat: 'animals', name: '돌고래', en: 'Dolphin', emoji: '🐬', hint: '바다에서 점프해요! 똑똒하고 사람을 좋아해요!' },
+      { id: 'bear', cat: 'animals', name: '곰', en: 'Bear', emoji: '🐻', hint: '겨울에 굴에서 잠을 자요. 꿀을 아주 좋아해요!' },
+      { id: 'monkey', cat: 'animals', name: '원숭이', en: 'Monkey', emoji: '🐵', hint: '나무를 잘 타요. 바나나를 좋아해요!' },
+      { id: 'frog', cat: 'animals', name: '개구리', en: 'Frog', emoji: '🐸', hint: '개굴개굴 울어요. 연못에서 폴짝폴짝 뛰어요!' },
+      { id: 'butterfly', cat: 'animals', name: '나비', en: 'Butterfly', emoji: '🦋', hint: '예쁜 날개로 팔랑팔랑 날아요. 꽃을 좋아해요!' },
+      { id: 'turtle', cat: 'animals', name: '거북이', en: 'Turtle', emoji: '🐢', hint: '등에 딱딱한 집을 지고 다녀요. 느리지만 꾸준해요!' },
+      { id: 'shark', cat: 'animals', name: '상어', en: 'Shark', emoji: '🦈', hint: '바다에서 제일 무서워요! 뾰족한 이빨이 있어요!' },
+      { id: 'owl', cat: 'animals', name: '부엉이', en: 'Owl', emoji: '🦉', hint: '밤에 활동해요. 큰 눈으로 어둠 속을 봐요! 부엉부엉!' },
+
+      { id: 'car', cat: 'vehicles', name: '자동차', en: 'Car', emoji: '🚗', hint: '바퀴가 네 개예요. 부릉부릉 도로를 달려요!' },
+      { id: 'airplane', cat: 'vehicles', name: '비행기', en: 'Airplane', emoji: '✈️', hint: '하늘을 날아요! 날개가 있고 구름 위를 지나가요!' },
+      { id: 'train', cat: 'vehicles', name: '기차', en: 'Train', emoji: '🚂', hint: '칙칙폭폭! 기다란 줄을 이루고 철로 위를 달려요!' },
+      { id: 'firetruck', cat: 'vehicles', name: '소방차', en: 'Firetruck', emoji: '🚒', hint: '빨간색이에요! 불을 끄러 삐뽀삐뽀 달려가요!' },
+      { id: 'rocket', cat: 'vehicles', name: '로켓', en: 'Rocket', emoji: '🚀', hint: '우주로 날아가요! 쑤웅~ 불꽃을 내뿜어요!' },
+      { id: 'bicycle', cat: 'vehicles', name: '자전거', en: 'Bicycle', emoji: '🚲', hint: '바퀴가 두 개예요. 페달을 밟으면 달려요!' },
+      { id: 'ship', cat: 'vehicles', name: '배', en: 'Ship', emoji: '🚢', hint: '물 위에 떠요. 바다를 건너갈 수 있어요!' },
+      { id: 'helicopter', cat: 'vehicles', name: '헬리콥터', en: 'Helicopter', emoji: '🚁', hint: '머리 위에 큰 프로펠러가 돌아가요! 하늘을 날아요!' },
+
+      { id: 'sun', cat: 'town', name: '해', en: 'Sun', emoji: '☀️', hint: '아침에 떠올라요. 밝고 뜨거워요! 세상을 환하게 해줘요!' },
+      { id: 'moon', cat: 'town', name: '달', en: 'Moon', emoji: '🌙', hint: '밤하늘에 빛나요. 동그랗다가 반달이 되기도 해요!' },
+      { id: 'star', cat: 'town', name: '별', en: 'Star', emoji: '⭐', hint: '밤하늘에서 반짝반짝 빛나요! 소원을 빌어요!' },
+      { id: 'rainbow', cat: 'town', name: '무지개', en: 'Rainbow', emoji: '🌈', hint: '비 온 뒤에 나와요. 일곱 가지 색깔이 있어요!' },
+      { id: 'snowman', cat: 'town', name: '눈사람', en: 'Snowman', emoji: '⛄', hint: '겨울에 눈으로 만들어요. 당근 코에 모자를 써요!' },
+      { id: 'flower', cat: 'town', name: '꽃', en: 'Flower', emoji: '🌸', hint: '봄에 피어요! 예쁘고 향기가 좋아요. 나비가 찾아와요!' },
+
+      { id: 'pizza', cat: 'food', name: '피자', en: 'Pizza', emoji: '🍕', hint: '세모 모양이에요. 치즈가 늘어나요! 이탈리아 음식이에요!' },
+      { id: 'icecream', cat: 'food', name: '아이스크림', en: 'Ice cream', emoji: '🍦', hint: '차갑고 달콤해요! 여름에 먹으면 시원해요!' },
+      { id: 'cake', cat: 'food', name: '케이크', en: 'Cake', emoji: '🎂', hint: '생일에 먹어요! 초를 꽂고 후~ 불어요!' },
+      { id: 'donut', cat: 'food', name: '도넛', en: 'Donut', emoji: '🍩', hint: '동그란데 가운데 구멍이 뻥 뚫려있어요! 달콤해요!' },
+      { id: 'hamburger', cat: 'food', name: '햄버거', en: 'Hamburger', emoji: '🍔', hint: '빵 사이에 고기랑 야채가 들어있어요! 맛있어요!' },
+      { id: 'egg', cat: 'food', name: '계란프라이', en: 'Fried egg', emoji: '🍳', hint: '후라이팬에서 지글지글! 노른자는 동그랗고 노래요!' },
+
+      { id: 'umbrella', cat: 'town', name: '우산', en: 'Umbrella', emoji: '☂️', hint: '비 올 때 펼쳐요! 머리 위에 쓰면 비를 안 맞아요!' },
+      { id: 'clock', cat: 'town', name: '시계', en: 'Clock', emoji: '⏰', hint: '똑딱똑딱! 시간을 알려줘요. 바늘이 돌아가요!' },
+      { id: 'balloon', cat: 'town', name: '풍선', en: 'Balloon', emoji: '🎈', hint: '바람을 넣으면 동그랗게 커져요! 하늘로 날아가요!' },
+      { id: 'scissors', cat: 'town', name: '가위', en: 'Scissors', emoji: '✂️', hint: '싹둑싹둑! 종이를 자를 수 있어요. 손잡이가 두 개예요!' },
+      { id: 'key', cat: 'town', name: '열쇠', en: 'Key', emoji: '🔑', hint: '문을 열 때 필요해요. 철커덕! 자물쇠에 넣어요!' },
+      { id: 'glasses', cat: 'town', name: '안경', en: 'Glasses', emoji: '👓', hint: '눈에 쓰면 잘 보여요! 다리가 두 개, 알이 두 개예요!' },
+      { id: 'gift', cat: 'town', name: '선물', en: 'Gift', emoji: '🎁', hint: '예쁜 상자에 리본이 달려있어요! 생일에 받으면 기뻐요!' },
+
+      { id: 'house', cat: 'town', name: '집', en: 'House', emoji: '🏠', hint: '가족이 함께 살아요. 지붕이 있고 문이 있어요!' },
+      { id: 'school', cat: 'town', name: '학교', en: 'School', emoji: '🏫', hint: '친구들과 만나는 곳이에요! 선생님이 계세요!' },
+      { id: 'hospital', cat: 'town', name: '병원', en: 'Hospital', emoji: '🏥', hint: '아프면 가는 곳이에요. 의사 선생님이 고쳐줘요!' },
+
+      { id: 'santa', cat: 'town', name: '산타', en: 'Santa', emoji: '🎅', hint: '빨간 옷을 입고 하얀 수염이 있어요! 크리스마스에 선물을 줘요!' },
+      { id: 'princess', cat: 'town', name: '공주', en: 'Princess', emoji: '👸', hint: '예쁜 드레스를 입고 반짝이는 왕관을 써요!' },
+      { id: 'astronaut', cat: 'town', name: '우주인', en: 'Astronaut', emoji: '👨‍🚀', hint: '우주복을 입고 달에 가요! 둥둥 떠다녀요!' },
+
+      { id: 'guitar', cat: 'town', name: '기타', en: 'Guitar', emoji: '🎸', hint: '줄을 뚱뚱 퉁기면 소리가 나요! 노래할 때 같이 쳐요!' },
+      { id: 'drum', cat: 'town', name: '드럼', en: 'Drum', emoji: '🥁', hint: '둥둥! 채로 두드리면 큰 소리가 나요!' },
+      { id: 'piano', cat: 'town', name: '피아노', en: 'Piano', emoji: '🎹', hint: '까만 건반 하얀 건반! 손가락으로 눌러서 소리를 내요!' },
+
+      // 새 먹거리 (61~75)
+      { id: 'carrot', cat: 'food', name: '당근', en: 'Carrot', emoji: '🥕', hint: '주황색이고 길쭉해요! 토끼가 아주 좋아해요!' },
+      { id: 'corn', cat: 'food', name: '옥수수', en: 'Corn', emoji: '🌽', hint: '노란 알갱이가 빽빽하게 붙어있어요! 쪄 먹으면 달콤해요!' },
+      { id: 'sweetpotato', cat: 'food', name: '고구마', en: 'Sweet Potato', emoji: '🍠', hint: '땅속에서 캐요! 구워 먹으면 달콤하고 포슬포슬해요!' },
+      { id: 'broccoli', cat: 'food', name: '브로콜리', en: 'Broccoli', emoji: '🥦', hint: '초록 나무처럼 생겼어요! 몸에 아주 좋은 채소예요!' },
+      { id: 'mushroom', cat: 'food', name: '버섯', en: 'Mushroom', emoji: '🍄', hint: '숲속에서 자라요! 우산처럼 생겼어요. 요리에 넣으면 맛있어요!' },
+      { id: 'bread', cat: 'food', name: '빵', en: 'Bread', emoji: '🍞', hint: '밀가루로 만들어요! 구우면 따뜻하고 부드러워요!' },
+      { id: 'milk', cat: 'food', name: '우유', en: 'Milk', emoji: '🥛', hint: '하얗고 영양이 많아요! 소에서 나와요. 뼈를 튼튼하게 해줘요!' },
+      { id: 'chocolate', cat: 'food', name: '초콜릿', en: 'Chocolate', emoji: '🍫', hint: '달콤해요! 입에 넣으면 사르르 녹아요!' },
+      { id: 'candy', cat: 'food', name: '사탕', en: 'Candy', emoji: '🍬', hint: '빨면 달콤해요! 알록달록 여러 가지 맛이 있어요!' },
+      { id: 'peanut', cat: 'food', name: '땅콩', en: 'Peanut', emoji: '🥜', hint: '땅속에서 자라요! 껍질을 까면 작은 알이 나와요!' },
+      { id: 'rawegg', cat: 'food', name: '달걀', en: 'Egg', emoji: '🥚', hint: '닭이 낳아요! 타원형이고 안에 노른자가 있어요!' },
+      { id: 'ramen', cat: 'food', name: '라면', en: 'Ramen', emoji: '🍜', hint: '꼬불꼬불한 면이에요! 뜨거운 국물이랑 먹어요!' },
+      { id: 'frenchfries', cat: 'food', name: '감자튀김', en: 'French Fries', emoji: '🍟', hint: '감자를 길게 잘라 튀긴 거예요! 바삭바삭해요!' },
+      { id: 'cupcake', cat: 'food', name: '컵케이크', en: 'Cupcake', emoji: '🧁', hint: '작은 컵 속에 든 케이크예요! 위에 크림이 달콤해요!' },
+      { id: 'kiwi', cat: 'food', name: '키위', en: 'Kiwi', emoji: '🥝', hint: '갈색 털이 있어요. 속은 초록색이에요! 새콤달콤해요!' },
+
+      // 새 동물 (76~89)
+      { id: 'chicken', cat: 'animals', name: '닭', en: 'Chicken', emoji: '🐓', hint: '꼬끼오! 아침을 알려줘요! 달걀을 낳아요!' },
+      { id: 'cow', cat: 'animals', name: '소', en: 'Cow', emoji: '🐄', hint: '음메~ 하고 울어요! 우유를 줘요. 힘이 세요!' },
+      { id: 'pig', cat: 'animals', name: '돼지', en: 'Pig', emoji: '🐷', hint: '꿀꿀! 코가 납작하고 동그래요. 분홍색이에요!' },
+      { id: 'sheep', cat: 'animals', name: '양', en: 'Sheep', emoji: '🐏', hint: '흰 털이 복슬복슬해요! 매에~ 하고 울어요!' },
+      { id: 'fox', cat: 'animals', name: '여우', en: 'Fox', emoji: '🦊', hint: '꼬리가 크고 복슬복슬해요! 주황색이고 영리해요!' },
+      { id: 'deer', cat: 'animals', name: '사슴', en: 'Deer', emoji: '🦌', hint: '머리에 뿔이 있어요! 눈이 크고 숲속을 뛰어다녀요!' },
+      { id: 'camel', cat: 'animals', name: '낙타', en: 'Camel', emoji: '🐪', hint: '등에 혹이 있어요! 덥고 건조한 사막에서 살아요!' },
+      { id: 'eagle', cat: 'animals', name: '독수리', en: 'Eagle', emoji: '🦅', hint: '하늘 높이 날아요! 눈이 아주 잘 보이고 발톱이 날카로워요!' },
+      { id: 'parrot', cat: 'animals', name: '앵무새', en: 'Parrot', emoji: '🦜', hint: '사람 말을 따라 해요! 알록달록 색깔이 예뻐요!' },
+      { id: 'crocodile', cat: 'animals', name: '악어', en: 'Crocodile', emoji: '🐊', hint: '이빨이 뾰족뾰족해요! 강가에서 기다리다가 번쩍 물어요!' },
+      { id: 'bee', cat: 'animals', name: '꿀벌', en: 'Bee', emoji: '🐝', hint: '윙윙! 꽃에서 꿀을 모아요. 노란 줄무늬가 있어요!' },
+      { id: 'squirrel', cat: 'animals', name: '다람쥐', en: 'Squirrel', emoji: '🐿️', hint: '볼에 도토리를 가득 넣어요! 나무를 재빠르게 올라가요!' },
+      { id: 'octopus', cat: 'animals', name: '문어', en: 'Octopus', emoji: '🐙', hint: '다리가 여덟 개예요! 먹물을 뿜어서 도망가요!' },
+      { id: 'otter', cat: 'animals', name: '수달', en: 'Otter', emoji: '🦦', hint: '물에서 헤엄을 잘 쳐요! 돌로 조개를 깨 먹기도 해요!' },
+
+      // 새 탈것 (90~102)
+      { id: 'taxi', cat: 'vehicles', name: '택시', en: 'Taxi', emoji: '🚕', hint: '노란색이에요! 손을 흔들면 세워줘요. 돈을 내고 타요!' },
+      { id: 'bus', cat: 'vehicles', name: '버스', en: 'Bus', emoji: '🚌', hint: '사람들이 많이 타요! 정류장에서 타고 내려요!' },
+      { id: 'ambulance', cat: 'vehicles', name: '구급차', en: 'Ambulance', emoji: '🚑', hint: '아픈 사람을 태워요! 삐뽀삐뽀 달려가요!' },
+      { id: 'policecar', cat: 'vehicles', name: '경찰차', en: 'Police Car', emoji: '🚓', hint: '빨파란 불이 번쩍여요! 나쁜 사람을 잡으러 달려가요!' },
+      { id: 'truck', cat: 'vehicles', name: '트럭', en: 'Truck', emoji: '🚛', hint: '짐을 아주 많이 실어요! 크고 힘이 세요!' },
+      { id: 'tractor', cat: 'vehicles', name: '트랙터', en: 'Tractor', emoji: '🚜', hint: '농장에서 일해요! 바퀴가 아주 크고 밭을 갈아요!' },
+      { id: 'racecar', cat: 'vehicles', name: '경주차', en: 'Race Car', emoji: '🏎️', hint: '아주 빠르게 달려요! 도로를 씽씽 달리는 게 멋있어요!' },
+      { id: 'boat', cat: 'vehicles', name: '보트', en: 'Boat', emoji: '🚤', hint: '물 위를 빠르게 달려요! 파도를 가르며 나가요!' },
+      { id: 'cablecar', cat: 'vehicles', name: '케이블카', en: 'Cable Car', emoji: '🚠', hint: '줄에 매달려서 산을 올라가요! 창 밖 경치가 멋져요!' },
+      { id: 'sailboat', cat: 'vehicles', name: '돛단배', en: 'Sailboat', emoji: '⛵', hint: '바람을 받아 달려요! 하얀 돛이 펼쳐져 있어요!' },
+      { id: 'ufo', cat: 'vehicles', name: 'UFO', en: 'UFO', emoji: '🛸', hint: '둥근 접시 모양이에요! 외계인이 타고 온다고 해요!' },
+      { id: 'parachute', cat: 'vehicles', name: '낙하산', en: 'Parachute', emoji: '🪂', hint: '하늘에서 사뿐히 내려와요! 커다란 우산 같아요!' },
+      { id: 'motorcycle', cat: 'vehicles', name: '오토바이', en: 'Motorcycle', emoji: '🏍️', hint: '바퀴가 두 개예요! 부릉부릉 빠르게 달려요!' },
+
+      // 새 우리 동네 (103~122)
+      { id: 'book', cat: 'town', name: '책', en: 'Book', emoji: '📚', hint: '종이에 글과 그림이 담겨있어요! 읽으면 지식이 쌓여요!' },
+      { id: 'pencil', cat: 'town', name: '연필', en: 'Pencil', emoji: '✏️', hint: '종이에 글씨를 써요! 지우개로 지울 수 있어요!' },
+      { id: 'paint', cat: 'town', name: '물감', en: 'Paint', emoji: '🎨', hint: '붓에 묻혀 그림을 그려요! 빨주노초파남보 색이 있어요!' },
+      { id: 'teddybear', cat: 'town', name: '곰인형', en: 'Teddy Bear', emoji: '🧸', hint: '포근하고 부드러워요! 안아주면 기분이 좋아요!' },
+      { id: 'dice', cat: 'town', name: '주사위', en: 'Dice', emoji: '🎲', hint: '여섯 면이 있어요! 굴리면 숫자가 나와요!' },
+      { id: 'puzzle', cat: 'town', name: '퍼즐', en: 'Puzzle', emoji: '🧩', hint: '조각들을 딱 맞춰요! 다 맞추면 그림이 완성돼요!' },
+      { id: 'camera', cat: 'town', name: '카메라', en: 'Camera', emoji: '📸', hint: '찰칵! 사진을 찍어요! 소중한 추억을 남겨줘요!' },
+      { id: 'telescope', cat: 'town', name: '망원경', en: 'Telescope', emoji: '🔭', hint: '멀리 있는 걸 크게 보여줘요! 별을 볼 때 써요!' },
+      { id: 'tree', cat: 'town', name: '나무', en: 'Tree', emoji: '🌳', hint: '뿌리, 줄기, 잎이 있어요! 그늘을 만들어줘요. 새가 살아요!' },
+      { id: 'mountain', cat: 'town', name: '산', en: 'Mountain', emoji: '🏔️', hint: '아주 높아요! 꼭대기에 올라가면 바람이 세게 불어요!' },
+      { id: 'wave', cat: 'town', name: '파도', en: 'Wave', emoji: '🌊', hint: '바닷가에서 넘실넘실해요! 쏴아~ 소리가 나요!' },
+      { id: 'tent', cat: 'town', name: '텐트', en: 'Tent', emoji: '⛺', hint: '캠핑할 때 세워요! 삼각형 모양이에요. 안에서 잠을 자요!' },
+      { id: 'castle', cat: 'town', name: '성', en: 'Castle', emoji: '🏰', hint: '높은 탑이 있어요! 왕과 공주가 살아요!' },
+      { id: 'ferriswheel', cat: 'town', name: '관람차', en: 'Ferris Wheel', emoji: '🎡', hint: '크고 둥근 바퀴예요! 천천히 돌아가요. 높이 올라가면 멀리 보여요!' },
+      { id: 'fountain', cat: 'town', name: '분수', en: 'Fountain', emoji: '⛲', hint: '공원에 있어요! 물이 하늘로 솟구쳐 올라와요!' },
+      { id: 'carousel', cat: 'town', name: '회전목마', en: 'Carousel', emoji: '🎠', hint: '말이 빙글빙글 돌아가요! 음악과 함께 신나게 돌아요!' },
+      { id: 'circus', cat: 'town', name: '서커스', en: 'Circus', emoji: '🎪', hint: '멋진 묘기를 보여줘요! 원형 텐트 안에서 신나게 해요!' },
+      { id: 'bridge', cat: 'town', name: '다리', en: 'Bridge', emoji: '🌉', hint: '강이나 바다 위를 건너가요! 차와 사람이 다녀요!' },
+      { id: 'flashlight', cat: 'town', name: '손전등', en: 'Flashlight', emoji: '🔦', hint: '손으로 쥐고 빛을 내요! 어두운 곳에서 켜요!' },
+      { id: 'magnet', cat: 'town', name: '자석', en: 'Magnet', emoji: '🧲', hint: '쇠붙이를 당기는 힘이 있어요! 빨간쪽과 파란쪽이 있어요!' },
+    ];
+
+    const TOTAL_QUESTIONS = 10;
+    const OPTION_COUNT = 3;
+
+    let score = 0;
+    let currentQ = 0;
+    let quizData = [];
+    let _curAudio = null;
+    let answered = false;
+    let currentHintIdx = 0;
+    let currentHint = '';
+
+    // History array to prevent asking the same question again unless all have been asked
+    let history = JSON.parse(localStorage.getItem('gk-quiz-history')) || [];
+
+    const startScreen = document.getElementById('startScreen');
+    const quizScreen = document.getElementById('quizScreen');
+    const resultScreen = document.getElementById('resultScreen');
+
+    const progressBar = document.getElementById('progressBar');
+    const quizProgress = document.getElementById('quizProgress');
+    const hintText = document.getElementById('hintText');
+    const hintReplay = document.getElementById('hintReplay');
+    const choicesEl = document.getElementById('choices');
+    const feedback = document.getElementById('feedback');
+    const feedbackInner = document.getElementById('feedbackInner');
+    const startBtn = document.getElementById('startBtn');
+
+    // Category Selection Logic
+    const catBtns = document.querySelectorAll('.cat-btn');
+    const catAllBtn = document.getElementById('catAllBtn');
+
+    // Display counts
+    const catCounts = {};
+    ALL_ITEMS.forEach(it => {
+      catCounts[it.cat] = (catCounts[it.cat] || 0) + 1;
+    });
+
+    catBtns.forEach(btn => {
+      const cat = btn.dataset.cat;
+      const count = catCounts[cat] || 0;
+      const originalText = btn.textContent;
+      btn.innerHTML = `<div style="margin-bottom: 2px;">${originalText}</div><div style="font-size: 0.75em; opacity: 0.7;">(${count}문제)</div>`;
+
+      btn.addEventListener('pointerdown', (e) => {
+        e.preventDefault();
+        btn.classList.toggle('active');
+        updateStartBtn();
+      });
+    });
+
+    function updateStartBtn() {
+      const anyActive = Array.from(catBtns).some(b => b.classList.contains('active'));
+      const allActive = Array.from(catBtns).every(b => b.classList.contains('active'));
+      startBtn.style.opacity = anyActive ? '1' : '0.5';
+      startBtn.style.pointerEvents = anyActive ? 'auto' : 'none';
+
+      if (allActive) {
+        catAllBtn.classList.add('active');
+        catAllBtn.innerHTML = `✅ 모두 섞어서 <span style="font-size: 0.85em; opacity: 0.8;">(총 ${ALL_ITEMS.length}문제)</span>`;
+      } else {
+        catAllBtn.classList.remove('active');
+        catAllBtn.innerHTML = `모두 섞어서 <span style="font-size: 0.8em; opacity: 0.6;">(전체선택)</span>`;
+      }
+    }
+
+    // Initial call to set the "모두 섞어서" text properly on load
+    updateStartBtn();
+
+    catAllBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      const isAllActive = catAllBtn.classList.contains('active');
+      catBtns.forEach(b => {
+        if (isAllActive) b.classList.remove('active');
+        else b.classList.add('active');
+      });
+      updateStartBtn();
+    });
+
+    startBtn.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      startGame();
+    });
+
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+
+    function getSelectedCategories() {
+      return Array.from(catBtns)
+        .filter(b => b.classList.contains('active'))
+        .map(b => b.dataset.cat);
+    }
+
+    function startGame() {
+      score = 0;
+      currentQ = 0;
+
+      const selectedCats = getSelectedCategories();
+      quizData = generateQuizData(selectedCats);
+
+      if (quizData.length === 0) return;
+
+      startScreen.classList.remove('active');
+      resultScreen.classList.remove('active');
+      quizScreen.classList.add('active');
+      gkUpdateText();
+
+      showQuestion();
+    }
+
+    function generateQuizData(selectedCats) {
+      // 1. Filter ALL_ITEMS by selected categories
+      let pool = ALL_ITEMS.filter(item => selectedCats.includes(item.cat));
+
+      // 2. Filter out already asked questions from history
+      let availablePool = pool.filter(item => !history.includes(item.id));
+
+      // 3. If there are not enough available questions, reset the history for these categories
+      if (availablePool.length < TOTAL_QUESTIONS) {
+        console.log("Not enough new questions. Resetting history for selected categories.");
+        const selectedIds = pool.map(i => i.id);
+        history = history.filter(id => !selectedIds.includes(id));
+        availablePool = pool; // use all questions from these categories again
+      }
+
+      const shuffled = shuffle(availablePool);
+      const data = [];
+      const questionsToAsk = Math.min(TOTAL_QUESTIONS, shuffled.length); // usually 10, unless pool is incredibly small
+
+      for (let i = 0; i < questionsToAsk; i++) {
+        const target = shuffled[i];
+
+        // Options can come from anywhere, but let's prefer the same category pool for options to make it harder, 
+        // falling back to ALL_ITEMS if needed.
+        let optionPool = pool.length >= OPTION_COUNT ? pool : ALL_ITEMS;
+        let others = shuffle(optionPool).filter(x => x.id !== target.id);
+        others = others.slice(0, OPTION_COUNT - 1);
+
+        const options = shuffle([target, ...others]);
+        data.push({ correct: target, options });
+
+        // Add to history and save
+        history.push(target.id);
+      }
+
+      localStorage.setItem('gk-quiz-history', JSON.stringify(history));
+      return data;
+    }
+
+    function showQuestion() {
+      answered = false;
+      const q = quizData[currentQ];
+
+      quizProgress.textContent = `${currentQ + 1} / ${quizData.length}`;
+      progressBar.style.width = ((currentQ) / quizData.length * 100) + '%';
+
+      // Initially hide choices and replay button
+      choicesEl.style.visibility = 'hidden';
+      choicesEl.style.display = '';
+      hintReplay.style.visibility = 'hidden';
+      hintReplay.style.display = '';
+
+      // Hint
+      currentHint = q.correct.hint;
+      currentHintIdx = ALL_ITEMS.indexOf(q.correct);
+      hintText.textContent = currentHint;
+      playAudio('audio/hint/hint-' + currentHintIdx + '.mp3', currentHint, () => {
+        // Show choices after audio completes
+        choicesEl.style.visibility = 'visible';
+        hintReplay.style.visibility = 'visible';
+
+        // Trigger animation for choices
+        choicesEl.style.animation = 'none';
+        requestAnimationFrame(() => { choicesEl.style.animation = ''; });
+      });
+
+      // Choices
+      choicesEl.innerHTML = '';
+      q.options.forEach((opt) => {
+        const btn = document.createElement('button');
+        btn.className = 'choice-btn';
+        btn.setAttribute('style', 'background-color:#ffffff !important;border-color:#F0E0D8 !important;');
+        btn.innerHTML = `<span style="pointer-events:none;">${opt.emoji}</span><span class="choice-name" style="color:#B0A090;">${opt.name}</span>`;
+        btn.addEventListener('pointerdown', (e) => {
+          e.preventDefault();
+          if (answered) return;
+          handleAnswer(btn, opt, q.correct);
+        });
+        choicesEl.appendChild(btn);
+      });
+
+      // Re-trigger animation for hint box
+      const hintBox = document.querySelector('.hint-box');
+      hintBox.style.animation = 'none';
+      requestAnimationFrame(() => { hintBox.style.animation = ''; });
+    }
+
+    // Replay hint
+    hintReplay.addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      if (answered) return;
+      playAudio('audio/hint/hint-' + currentHintIdx + '.mp3', currentHint);
+    });
+
+    function handleAnswer(btn, selected, correct) {
+      answered = true;
+      stopAllAudio();
+
+      let advanced = false;
+      function advance() {
+        if (advanced) return;
+        advanced = true;
+        stopAllAudio();
+        currentQ++;
+        if (currentQ < quizData.length) showQuestion();
+        else showResult();
+      }
+
+      if (selected.name === correct.name) {
+        btn.classList.add('correct');
+        btn.setAttribute('style', 'background-color:#E8FFF8 !important;border-color:#4ECDC4 !important;');
+        score++;
+        showFeedback('⭕');
+        spawnSnowSparkles();
+        playAudio('audio/hint/correct-' + currentHintIdx + '.mp3', '맞았어요! ' + correct.name + '! 정말 잘했어요!', advance);
+      } else {
+        btn.classList.add('wrong');
+        btn.setAttribute('style', 'background-color:#FFF0F0 !important;border-color:#FF6B6B !important;opacity:0.5;');
+        const allBtns = choicesEl.querySelectorAll('.choice-btn');
+        allBtns.forEach(b => {
+          if (b.querySelector('span').textContent === correct.emoji) {
+            b.classList.add('correct');
+            b.setAttribute('style', 'background-color:#E8FFF8 !important;border-color:#4ECDC4 !important;');
+          }
+        });
+        showFeedback('❌');
+        playAudio('audio/hint/wrong-' + currentHintIdx + '.mp3', '아쉬워요! 정답은 ' + correct.name + '이에요!', advance);
+      }
+
+      setTimeout(advance, 10000); // 안전 타임아웃 (오디오 onended 미발동 대비, 기존 4초에서 늘림)
+    }
+
+    function showFeedback(emoji) {
+      feedbackInner.textContent = emoji;
+      feedback.classList.remove('active');
+      void feedback.offsetWidth;
+      feedback.classList.add('active');
+      feedbackInner.style.animation = 'none';
+      requestAnimationFrame(() => { feedbackInner.style.animation = ''; });
+      setTimeout(() => feedback.classList.remove('active'), 900);
+    }
+
+    function spawnSnowSparkles() {
+      const emojis = ['✨', '⭐', '❄️', '🌟', '💫', '🌈', '🦄', '🎉', '💖', '♥️'];
+      const count = 28;
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          const el = document.createElement('div');
+          el.className = 'snow-sparkle';
+          el.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+          const duration = (1.5 + Math.random() * 1.5).toFixed(2) + 's';
+          const drift = ((Math.random() - 0.5) * 120).toFixed(0) + 'px';
+          el.style.setProperty('--duration', duration);
+          el.style.setProperty('--drift', drift);
+          el.style.left = (Math.random() * 100) + 'vw';
+          el.style.fontSize = (16 + Math.random() * 14) + 'px';
+          document.body.appendChild(el);
+          setTimeout(() => el.remove(), parseFloat(duration) * 1000 + 100);
+        }, i * 60);
+      }
+    }
+
+    function showResult() {
+      quizScreen.classList.remove('active');
+      resultScreen.classList.add('active');
+      progressBar.style.width = '100%';
+
+      const pct = score / TOTAL_QUESTIONS;
+      let emoji, title, sub;
+      if (pct >= 0.9) { emoji = '🏆'; title = '완벽해요!'; sub = '힌트 박사님이네요!'; }
+      else if (pct >= 0.7) { emoji = '🌟'; title = '잘했어요!'; sub = '거의 다 맞았어요!'; }
+      else if (pct >= 0.5) { emoji = '👏'; title = '좋아요!'; sub = '조금만 더 연습해요!'; }
+      else { emoji = '💪'; title = '괜찮아요!'; sub = '다시 한번 도전해요!'; }
+
+      document.getElementById('resultEmoji').textContent = emoji;
+      document.getElementById('resultTitle').textContent = title;
+      document.getElementById('resultScore').textContent = `${score} / ${quizData.length} 맞았어요!`;
+      document.getElementById('resultSub').textContent = sub;
+
+      speak(title + ' ' + score + '개 맞았어요! ' + sub);
+      if (pct >= 0.7) spawnConfetti();
+    }
+
+    document.getElementById('resultBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      // Go back to category selection screen, not straight into a new game
+      quizScreen.classList.remove('active');
+      resultScreen.classList.remove('active');
+      startScreen.classList.add('active');
+    });
+
+    function spawnConfetti() {
+      const emojis = ['🎉', '⭐', '🌈', '💫', '🎊', '🌟', '✨', '🎵', '❤️', '🎈'];
+      for (let i = 0; i < 20; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.animationDelay = Math.random() * 0.8 + 's';
+        c.style.animationDuration = (1.5 + Math.random() * 1.5) + 's';
+        document.body.appendChild(c);
+        setTimeout(() => c.remove(), 3500);
+      }
+    }
+
+    // TTS & Audio
+    function speak(text, cb) {
+      if (!window.speechSynthesis) { if (cb) cb(); return; }
+      const u = new SpeechSynthesisUtterance(text);
+      if (document.documentElement.lang === 'en') {
+        u.lang = 'en-US';
+      } else {
+        u.lang = 'ko-KR';
+      }
+      u.rate = 1.0;
+      u.pitch = 1.1;
+      u.volume = 1.0;
+
+      if (cb) u.onend = cb;
+      window.speechSynthesis.speak(u);
+    }
+
+    function stopAllAudio() {
+      if (_curAudio) { _curAudio.pause(); _curAudio = null; }
+      window.speechSynthesis && window.speechSynthesis.cancel();
+    }
+
+    function playAudio(src, fallback, onEnd) {
+      stopAllAudio();
+      const a = new Audio(src);
+      _curAudio = a;
+
+      const endCb = () => { if (onEnd) onEnd(); };
+      a.onended = endCb;
+      a.onerror = () => speak(fallback, endCb);
+
+      a.play().catch(() => speak(fallback, endCb));
+    }
+    if ('speechSynthesis' in window) { speechSynthesis.getVoices(); speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices(); }
+    // ===== GK LANG + PWA =====
+    function gkUpdateText() {
+      const isEn = document.documentElement.lang === 'en';
+      document.querySelectorAll('[data-ko]').forEach(el => {
+        el.textContent = isEn ? el.dataset.en : el.dataset.ko;
+      });
+    }
+    function gkToggleLang() {
+      const cur = document.documentElement.lang || 'ko';
+      const nxt = cur === 'ko' ? 'en' : 'ko';
+      document.documentElement.lang = nxt;
+      localStorage.setItem('gk-lang', nxt);
+      document.getElementById('gkLangBtn').textContent = nxt === 'en' ? '🇰🇷 KO' : '🇺🇸 EN';
+      gkUpdateText();
+    }
+    (function gkInit() {
+      const saved = localStorage.getItem('gk-lang') || 'ko';
+      document.documentElement.lang = saved;
+      const btn = document.getElementById('gkLangBtn');
+      if (btn) btn.textContent = saved === 'en' ? '🇰🇷 KO' : '🇺🇸 EN';
+      gkUpdateText();
+    })();
+  </script>
+</body>
+
+</html>

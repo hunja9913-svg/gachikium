@@ -1,0 +1,15 @@
+{
+  "name": "가치키움",
+  "short_name": "가치키움",
+  "description": "부모와 함께하는 무료 유아 교육 놀이",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FFF8F0",
+  "theme_color": "#FFA726",
+  "lang": "ko",
+  "icons": [
+    { "src": "icons/icon-192.svg", "sizes": "192x192", "type": "image/svg+xml", "purpose": "any maskable" },
+    { "src": "icons/icon-512.svg", "sizes": "512x512", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
