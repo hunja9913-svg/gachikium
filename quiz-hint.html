@@ -1191,12 +1191,9 @@
       const contBtn = document.getElementById('continueBtn');
       if (remaining > 0) {
         contBtn.textContent = `계속하기 ▶ (남은 ${remaining}개)`;
-        contBtn.style.opacity = '1';
-        contBtn.style.pointerEvents = 'auto';
+        contBtn.style.display = '';
       } else {
-        contBtn.textContent = '계속하기 (문제 소진! 처음부터)';
-        contBtn.style.opacity = '1';
-        contBtn.style.pointerEvents = 'auto';
+        contBtn.style.display = 'none';
       }
     }
 
