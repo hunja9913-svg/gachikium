@@ -689,6 +689,14 @@
       { emoji: '💪', text: '멋져요!', sub: '정말 잘했어요!' },
     ];
 
+    const DEV = new URLSearchParams(location.search).has('dev');
+    if (DEV) {
+      const badge = document.createElement('div');
+      badge.textContent = '🛠 DEV MODE';
+      badge.style.cssText = 'position:fixed;top:8px;right:8px;background:#FF6B6B;color:#fff;font-family:monospace;font-size:12px;padding:4px 8px;border-radius:8px;z-index:9999;opacity:0.85;';
+      document.body.appendChild(badge);
+    }
+
     let currentItem = null;
     let drawAbort = null; // AbortController for draw listeners
     let isDrawing = false;
@@ -743,16 +751,18 @@
       }
 
       const _idx = DATA.indexOf(item);
-      playAudio('audio/hangul/combined-' + _idx + '.mp3', item.letter + ' ' + item.sound);
+      resEmoji.textContent = item.emoji;
+      resLetter.textContent = item.letter;
+      resLetter.style.color = item.color;
+      resWord.textContent = item.word;
+      resSub.textContent = item.sound;
 
-      setTimeout(() => {
-        resEmoji.textContent = item.emoji;
-        resLetter.textContent = item.letter;
-        resLetter.style.color = item.color;
-        resWord.textContent = item.word;
-        resSub.textContent = item.sound;
+      if (DEV) {
         overlay.classList.add('active');
-      }, 400);
+        return;
+      }
+      playAudio('audio/hangul/combined-' + _idx + '.mp3', item.letter + ' ' + item.sound);
+      setTimeout(() => { overlay.classList.add('active'); }, 400);
     }
 
     // ── RESULT BUTTONS ──

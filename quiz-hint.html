@@ -870,6 +870,13 @@
 
     const TOTAL_QUESTIONS = 10;
     const OPTION_COUNT = 3;
+    const DEV = new URLSearchParams(location.search).has('dev');
+    if (DEV) {
+      const badge = document.createElement('div');
+      badge.textContent = '🛠 DEV MODE';
+      badge.style.cssText = 'position:fixed;top:8px;right:8px;background:#FF6B6B;color:#fff;font-family:monospace;font-size:12px;padding:4px 8px;border-radius:8px;z-index:9999;opacity:0.85;';
+      document.body.appendChild(badge);
+    }
 
     let score = 0;
     let currentQ = 0;
@@ -1039,15 +1046,18 @@
       currentHint = q.correct.hint;
       currentHintIdx = ALL_ITEMS.indexOf(q.correct);
       hintText.textContent = currentHint;
-      playAudio('audio/hint/hint-' + currentHintIdx + '.mp3', currentHint, () => {
-        // Show choices after audio completes
+      if (DEV) {
+        // DEV: 오디오 스킵, 선택지 즉시 표시
         choicesEl.style.visibility = 'visible';
         hintReplay.style.visibility = 'visible';
-
-        // Trigger animation for choices
-        choicesEl.style.animation = 'none';
-        requestAnimationFrame(() => { choicesEl.style.animation = ''; });
-      });
+      } else {
+        playAudio('audio/hint/hint-' + currentHintIdx + '.mp3', currentHint, () => {
+          choicesEl.style.visibility = 'visible';
+          hintReplay.style.visibility = 'visible';
+          choicesEl.style.animation = 'none';
+          requestAnimationFrame(() => { choicesEl.style.animation = ''; });
+        });
+      }
 
       // Choices
       choicesEl.innerHTML = '';
@@ -1112,7 +1122,7 @@
         playAudio('audio/hint/wrong-' + currentHintIdx + '.mp3', '아쉬워요! 정답은 ' + correct.name + '이에요!', advance);
       }
 
-      setTimeout(advance, 10000); // 안전 타임아웃 (오디오 onended 미발동 대비, 기존 4초에서 늘림)
+      setTimeout(advance, DEV ? 1500 : 10000); // DEV: 1.5초, 일반: 10초 안전 타임아웃
     }
 
     function showFeedback(emoji) {
@@ -1152,17 +1162,18 @@
 
       const pct = score / TOTAL_QUESTIONS;
       let emoji, title, sub;
-      if (pct >= 0.9) { emoji = '🏆'; title = '완벽해요!'; sub = '힌트 박사님이네요!'; }
-      else if (pct >= 0.7) { emoji = '🌟'; title = '잘했어요!'; sub = '거의 다 맞았어요!'; }
-      else if (pct >= 0.5) { emoji = '👏'; title = '좋아요!'; sub = '조금만 더 연습해요!'; }
-      else { emoji = '💪'; title = '괜찮아요!'; sub = '다시 한번 도전해요!'; }
+      let resultIdx;
+      if (pct >= 0.9) { emoji = '🏆'; title = '완벽해요!'; sub = '힌트 박사님이네요!'; resultIdx = 0; }
+      else if (pct >= 0.7) { emoji = '🌟'; title = '잘했어요!'; sub = '거의 다 맞았어요!'; resultIdx = 1; }
+      else if (pct >= 0.5) { emoji = '👏'; title = '좋아요!'; sub = '조금만 더 연습해요!'; resultIdx = 2; }
+      else { emoji = '💪'; title = '괜찮아요!'; sub = '다시 한번 도전해요!'; resultIdx = 3; }
 
       document.getElementById('resultEmoji').textContent = emoji;
       document.getElementById('resultTitle').textContent = title;
       document.getElementById('resultScore').textContent = `${score} / ${quizData.length} 맞았어요!`;
       document.getElementById('resultSub').textContent = sub;
 
-      speak(title + ' ' + score + '개 맞았어요! ' + sub);
+      playAudio('audio/hint/result-' + resultIdx + '.mp3', title + ' ' + sub);
       if (pct >= 0.7) spawnConfetti();
 
       // 계속하기 버튼: 남은 문제 수 계산

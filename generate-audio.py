@@ -272,6 +272,14 @@ async def main():
         tasks.append(gen(f'맞았어요! {item_name}! {praise}', f'audio/hint/correct-{i}.mp3'))
         tasks.append(gen(f'아쉬워요! 정답은 {item_name}이에요!', f'audio/hint/wrong-{i}.mp3'))
 
+    # ── 힌트퀴즈 결과 화면 (4단계) ────────────────────────────────
+    tasks += [
+        gen('완벽해요! 힌트 박사님이네요!',    'audio/hint/result-0.mp3'),
+        gen('잘했어요! 거의 다 맞았어요!',     'audio/hint/result-1.mp3'),
+        gen('좋아요! 조금만 더 연습해요!',     'audio/hint/result-2.mp3'),
+        gen('괜찮아요! 다시 한번 도전해요!',   'audio/hint/result-3.mp3'),
+    ]
+
     # ── 공통 ───────────────────────────────────────────────────────
     tasks += [
         gen('다시 써 보세요!',        'audio/common/again.mp3'),

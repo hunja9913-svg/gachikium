@@ -157,8 +157,10 @@ d:\gachikium\
 - **다크모드 방지**: `color-scheme: light only !important` + inline 스타일
 
 ### 배포
-- **계획**: Cloudflare Pages (무료, 대역폭 무제한)
-- **버전관리**: Git + GitHub
+- **라이브 URL**: https://gachikium.pages.dev ✅
+- **GitHub**: https://github.com/hunja9913-svg/gachikium
+- **플랫폼**: Cloudflare Pages (무료, 대역폭 무제한)
+- **버전관리**: Git + GitHub (`git push` → 자동 배포)
 
 ---
 

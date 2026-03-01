@@ -702,6 +702,14 @@
       { emoji: '💪', text: '멋져요!', sub: '점점 잘해요!' },
     ];
 
+    const DEV = new URLSearchParams(location.search).has('dev');
+    if (DEV) {
+      const badge = document.createElement('div');
+      badge.textContent = '🛠 DEV MODE';
+      badge.style.cssText = 'position:fixed;top:8px;right:8px;background:#FF6B6B;color:#fff;font-family:monospace;font-size:12px;padding:4px 8px;border-radius:8px;z-index:9999;opacity:0.85;';
+      document.body.appendChild(badge);
+    }
+
     let currentItem = null;
     let drawAbort = null;
     let isDrawing = false;
@@ -755,32 +763,37 @@
         setTimeout(() => sp.remove(), 700);
       }
       const _idx = DATA.indexOf(item);
-      playAudio('audio/number/word-' + _idx + '.mp3', item.word);
-      setTimeout(() => {
-        resEmoji.textContent = item.emoji;
-        resLetter.textContent = item.letter;
-        resLetter.style.color = item.color;
-        resWord.textContent = item.word;
-        resSub.textContent = item.sound;
+      const nums = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'];
+      const countFallback = nums.slice(0, item.count).join(', ') + '! ' + item.sound;
 
-        // Count display with staggered emojis
-        resCount.innerHTML = '';
-        for (let c = 0; c < item.count; c++) {
-          const s = document.createElement('span');
-          s.textContent = item.countEmoji;
-          s.style.animationDelay = (c * 0.12) + 's';
-          resCount.appendChild(s);
-        }
+      // 오버레이 DOM 미리 세팅 (오디오 끝난 뒤 바로 표시)
+      resEmoji.textContent = item.emoji;
+      resLetter.textContent = item.letter;
+      resLetter.style.color = item.color;
+      resWord.textContent = item.word;
+      resSub.textContent = item.sound;
+      resCount.innerHTML = '';
+      for (let c = 0; c < item.count; c++) {
+        const s = document.createElement('span');
+        s.textContent = item.countEmoji;
+        s.style.animationDelay = (c * 0.12) + 's';
+        resCount.appendChild(s);
+      }
 
+      function showCount() {
         overlay.classList.add('active');
-        // Count out loud
-        setTimeout(() => {
-          let countWords = [];
-          const nums = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'];
-          for (let c = 0; c < item.count; c++) countWords.push(nums[c]);
-          playAudio('audio/number/count-' + _idx + '.mp3', countWords.join(', ') + '! ' + item.sound);
-        }, 300);
-      }, 300);
+        playAudio('audio/number/count-' + _idx + '.mp3', countFallback);
+      }
+
+      stopAllAudio();
+      if (DEV) { showCount(); return; }
+
+      // word 오디오 끝난 직후 오버레이 + count 오디오 (싱크 보장)
+      const wordAudio = new Audio('audio/number/word-' + _idx + '.mp3');
+      _curAudio = wordAudio;
+      wordAudio.onended = showCount;
+      wordAudio.onerror = () => { speak(item.word); setTimeout(showCount, 800); };
+      wordAudio.play().catch(() => { speak(item.word); setTimeout(showCount, 800); });
     }
 
     // ── RESULT BUTTONS ──
