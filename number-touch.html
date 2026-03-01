@@ -230,6 +230,14 @@
     .result-count span {
       display: inline-block;
       animation: bounce 0.4s ease-in-out infinite alternate;
+      filter: grayscale(1);
+      opacity: 0.35;
+      transition: filter 0.2s ease, opacity 0.2s ease;
+    }
+
+    .result-count span.lit {
+      filter: none;
+      opacity: 1;
     }
 
     .btn-row {
@@ -780,17 +788,31 @@
         resCount.appendChild(s);
       }
 
+      function lightUp(intervalMs) {
+        const spans = resCount.querySelectorAll('span');
+        spans.forEach((span, i) => setTimeout(() => span.classList.add('lit'), i * intervalMs));
+      }
+
       function playCount() {
-        playAudio('audio/number/count-' + _idx + '.mp3', countFallback);
+        stopAllAudio();
+        const countAudio = new Audio('audio/number/count-' + _idx + '.mp3');
+        _curAudio = countAudio;
+        // duration 로드되면 count 구간(오디오 앞 65%) 기준으로 간격 계산
+        countAudio.addEventListener('loadedmetadata', () => {
+          const intervalMs = (countAudio.duration * 0.65 * 1000) / Math.max(item.count, 1);
+          lightUp(intervalMs);
+        }, { once: true });
+        countAudio.onerror = () => { lightUp(550); speak(countFallback); };
+        countAudio.play().catch(() => { lightUp(550); speak(countFallback); });
       }
 
       stopAllAudio();
-      // 팝업은 즉시 표시
+      // 팝업은 즉시 표시 (이모지는 흑백으로 시작)
       overlay.classList.add('active');
 
-      if (DEV) { playCount(); return; }
+      if (DEV) { lightUp(300); playCount(); return; }
 
-      // word 오디오 재생 → 끝나면 count 오디오 (팝업은 이미 떠있음)
+      // word 오디오 재생 → 끝나면 count 오디오 + 순차 점등
       const wordAudio = new Audio('audio/number/word-' + _idx + '.mp3');
       _curAudio = wordAudio;
       wordAudio.onended = playCount;
