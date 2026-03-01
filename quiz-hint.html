@@ -955,7 +955,7 @@
 
     startBtn.addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      startGame();
+      startGame(true);
     });
 
     function shuffle(arr) {
@@ -973,13 +973,22 @@
         .map(b => b.dataset.cat);
     }
 
-    function startGame() {
+    // fresh=true: 시작하기 (선택 카테고리 히스토리 초기화 후 새 게임)
+    // fresh=false: 계속하기 (히스토리 유지, 남은 문제 이어서)
+    function startGame(fresh = false) {
       score = 0;
       currentQ = 0;
 
       const selectedCats = getSelectedCategories();
-      quizData = generateQuizData(selectedCats);
 
+      if (fresh) {
+        // 선택된 카테고리 항목만 히스토리에서 제거
+        const selectedIds = ALL_ITEMS.filter(i => selectedCats.includes(i.cat)).map(i => i.id);
+        history = history.filter(id => !selectedIds.includes(id));
+        localStorage.setItem('gk-quiz-history', JSON.stringify(history));
+      }
+
+      quizData = generateQuizData(selectedCats);
       if (quizData.length === 0) return;
 
       startScreen.classList.remove('active');
@@ -997,12 +1006,11 @@
       // 2. Filter out already asked questions from history
       let availablePool = pool.filter(item => !history.includes(item.id));
 
-      // 3. If there are not enough available questions, reset the history for these categories
-      if (availablePool.length < TOTAL_QUESTIONS) {
-        console.log("Not enough new questions. Resetting history for selected categories.");
+      // 3. 완전히 소진됐을 때만 해당 카테고리 히스토리 리셋 (계속하기 순환용)
+      if (availablePool.length === 0) {
         const selectedIds = pool.map(i => i.id);
         history = history.filter(id => !selectedIds.includes(id));
-        availablePool = pool; // use all questions from these categories again
+        availablePool = pool;
       }
 
       const shuffled = shuffle(availablePool);
