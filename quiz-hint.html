@@ -1168,7 +1168,7 @@
       resultScreen.classList.add('active');
       progressBar.style.width = '100%';
 
-      const pct = score / TOTAL_QUESTIONS;
+      const pct = score / quizData.length;
       let emoji, title, sub;
       let resultIdx;
       if (pct >= 0.9) { emoji = '🏆'; title = '완벽해요!'; sub = '힌트 박사님이네요!'; resultIdx = 0; }
