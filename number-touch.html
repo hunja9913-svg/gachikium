@@ -780,20 +780,22 @@
         resCount.appendChild(s);
       }
 
-      function showCount() {
-        overlay.classList.add('active');
+      function playCount() {
         playAudio('audio/number/count-' + _idx + '.mp3', countFallback);
       }
 
       stopAllAudio();
-      if (DEV) { showCount(); return; }
+      // 팝업은 즉시 표시
+      overlay.classList.add('active');
 
-      // word 오디오 끝난 직후 오버레이 + count 오디오 (싱크 보장)
+      if (DEV) { playCount(); return; }
+
+      // word 오디오 재생 → 끝나면 count 오디오 (팝업은 이미 떠있음)
       const wordAudio = new Audio('audio/number/word-' + _idx + '.mp3');
       _curAudio = wordAudio;
-      wordAudio.onended = showCount;
-      wordAudio.onerror = () => { speak(item.word); setTimeout(showCount, 800); };
-      wordAudio.play().catch(() => { speak(item.word); setTimeout(showCount, 800); });
+      wordAudio.onended = playCount;
+      wordAudio.onerror = () => { speak(item.word); setTimeout(playCount, 800); };
+      wordAudio.play().catch(() => { speak(item.word); setTimeout(playCount, 800); });
     }
 
     // ── RESULT BUTTONS ──
