@@ -403,6 +403,28 @@
       box-shadow: 0 2px 0 rgba(200, 80, 50, 0.3);
     }
 
+    .btn-outline {
+      background: #fff;
+      color: #B08070;
+      border: 2px solid #E8D0C0;
+      box-shadow: 0 3px 0 rgba(0, 0, 0, 0.07);
+      font-size: clamp(15px, 3.8vw, 18px);
+      padding: 12px 28px;
+    }
+
+    .btn-outline:active {
+      transform: translateY(3px);
+      box-shadow: 0 0px 0 rgba(0, 0, 0, 0.07);
+    }
+
+    .result-btns {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      width: 100%;
+      align-items: center;
+    }
+
     /* === FEEDBACK OVERLAY === */
     .feedback-overlay {
       position: fixed;
@@ -692,7 +714,10 @@
       <div class="result-title" id="resultTitle">완벽해요!</div>
       <div class="result-score" id="resultScore">10 / 10 맞았어요!</div>
       <div class="result-sub" id="resultSub">힌트 박사님이네요!</div>
-      <button class="btn" id="resultBtn" data-ko="다시 하기 🔄" data-en="Play Again 🔄">다시 하기 🔄</button>
+      <div class="result-btns">
+        <button class="btn" id="continueBtn">계속하기 ▶</button>
+        <button class="btn btn-outline" id="resultBtn" data-ko="처음으로 🔄" data-en="Menu 🔄">처음으로 🔄</button>
+      </div>
     </div>
   </div>
 
@@ -1139,14 +1164,34 @@
 
       speak(title + ' ' + score + '개 맞았어요! ' + sub);
       if (pct >= 0.7) spawnConfetti();
+
+      // 계속하기 버튼: 남은 문제 수 계산
+      const selectedCats = getSelectedCategories();
+      const pool = ALL_ITEMS.filter(it => selectedCats.includes(it.cat));
+      const remaining = pool.filter(it => !history.includes(it.id)).length;
+      const contBtn = document.getElementById('continueBtn');
+      if (remaining > 0) {
+        contBtn.textContent = `계속하기 ▶ (남은 ${remaining}개)`;
+        contBtn.style.opacity = '1';
+        contBtn.style.pointerEvents = 'auto';
+      } else {
+        contBtn.textContent = '계속하기 (문제 소진! 처음부터)';
+        contBtn.style.opacity = '1';
+        contBtn.style.pointerEvents = 'auto';
+      }
     }
 
     document.getElementById('resultBtn').addEventListener('pointerdown', (e) => {
       e.preventDefault();
-      // Go back to category selection screen, not straight into a new game
       quizScreen.classList.remove('active');
       resultScreen.classList.remove('active');
       startScreen.classList.add('active');
+    });
+
+    document.getElementById('continueBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      resultScreen.classList.remove('active');
+      startGame(); // 같은 카테고리 선택 유지한 채 이어서 플레이
     });
 
     function spawnConfetti() {
