@@ -820,21 +820,16 @@
       guideCtx.lineWidth = 3;
       guideCtx.strokeRect(4, 4, w - 8, h - 8);
 
-      // Guide letter
+      // Guide letter — 소프트 글로우 (점선 → 두꺼운 반투명 solid)
       const fontSize = Math.min(w, h) * 0.7;
       guideCtx.font = `bold ${fontSize}px 'Jua', sans-serif`;
       guideCtx.textAlign = 'center';
       guideCtx.textBaseline = 'middle';
-
-      // Dotted outline
-      guideCtx.strokeStyle = item.color + '40';
-      guideCtx.lineWidth = 3;
-      guideCtx.setLineDash([8, 8]);
+      guideCtx.lineJoin = 'round';
+      guideCtx.strokeStyle = item.color + '35';
+      guideCtx.lineWidth = Math.max(10, fontSize * 0.06);
       guideCtx.strokeText(item.letter, w / 2, h / 2);
-      guideCtx.setLineDash([]);
-
-      // Faint fill
-      guideCtx.fillStyle = item.color + '15';
+      guideCtx.fillStyle = item.color + '20';
       guideCtx.fillText(item.letter, w / 2, h / 2);
 
       // Draw canvas setup
