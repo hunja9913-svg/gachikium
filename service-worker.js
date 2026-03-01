@@ -27,7 +27,10 @@ self.addEventListener('activate', e => {
 });
 
 self.addEventListener('fetch', e => {
+  // 페이지 이동(navigate)은 브라우저에게 위임 — Cloudflare 리다이렉트 충돌 방지
+  if (e.request.mode === 'navigate') return;
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
 });
+
