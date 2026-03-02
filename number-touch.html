@@ -163,6 +163,35 @@
       display: flex;
     }
 
+    .result-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 52px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 900;
+      cursor: pointer;
+      padding: 12px 10px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      user-select: none;
+      z-index: 10;
+      transition: transform 0.1s, opacity 0.1s;
+      line-height: 1;
+    }
+
+    .result-nav-left {
+      left: 6px;
+    }
+
+    .result-nav-right {
+      right: 6px;
+    }
+
+    .result-nav:active {
+      transform: translateY(-50%) scale(0.85);
+      opacity: 0.6;
+    }
+
     .result-card {
       background-color: #ffffff !important;
       color: #3F5B4A !important;
@@ -655,7 +684,8 @@
   </div>
 
   <div class="result-overlay" id="overlay">
-    <div class="result-card" style="background-color:#ffffff;color:#3F5B4A;">
+    <div class="result-nav result-nav-left" id="resNavLeft">&#8249;</div>
+    <div class="result-card" id="resultCard" style="background-color:#ffffff;color:#3F5B4A;">
       <div class="result-emoji" id="resEmoji"></div>
       <div class="result-letter" id="resLetter"></div>
       <div class="result-word" id="resWord" style="color:#3F5B4A;"></div>
@@ -667,6 +697,7 @@
         <button class="action-btn btn-trace" id="btnTrace" style="background-color:#4ECDC4;color:#fff;">따라쓰기 ✏️</button>
       </div>
     </div>
+    <div class="result-nav result-nav-right" id="resNavRight">&#8250;</div>
   </div>
 
   <div class="screen" id="traceScreen" style="background-color:#EEFBF5 !important;">
@@ -730,22 +761,22 @@
     // ── 필순 획 데이터 (정규화 좌표 0~1) ──
     // ── 필순 획 데이터 (글자 bounding box 기준 0~1, 좌상=0,0 우하=1,1) ──
     const STROKES = {
-      '1': [ [{x:.70,y:.05},{x:.70,y:.95}] ],
-      '2': [ [{x:.15,y:.35},{x:.28,y:.1},{x:.6,y:.05},{x:.85,y:.22},{x:.88,y:.48},{x:.65,y:.65},{x:.12,y:.85},{x:.88,y:.85}] ],
-      '3': [ [{x:.22,y:.12},{x:.72,y:.05},{x:.92,y:.28},{x:.5,y:.5},{x:.92,y:.72},{x:.72,y:.95},{x:.22,y:.90}] ],
+      '1': [[{ x: .70, y: .05 }, { x: .70, y: .95 }]],
+      '2': [[{ x: .15, y: .35 }, { x: .28, y: .1 }, { x: .6, y: .05 }, { x: .85, y: .22 }, { x: .88, y: .48 }, { x: .65, y: .65 }, { x: .12, y: .85 }, { x: .88, y: .85 }]],
+      '3': [[{ x: .22, y: .12 }, { x: .72, y: .05 }, { x: .92, y: .28 }, { x: .5, y: .5 }, { x: .92, y: .72 }, { x: .72, y: .95 }, { x: .22, y: .90 }]],
       '4': [
-        [{x:.7,y:.05},{x:.22,y:.65},{x:.88,y:.65}],
-        [{x:.7,y:.05},{x:.7,y:.95}]
+        [{ x: .7, y: .05 }, { x: .22, y: .65 }, { x: .88, y: .65 }],
+        [{ x: .7, y: .05 }, { x: .7, y: .95 }]
       ],
       '5': [
-        [{x:.12,y:.05},{x:.85,y:.05}],
-        [{x:.12,y:.05},{x:.12,y:.48}],
-        [{x:.12,y:.48},{x:.72,y:.48},{x:.85,y:.65},{x:.65,y:.90},{x:.18,y:.82}]
+        [{ x: .12, y: .05 }, { x: .85, y: .05 }],
+        [{ x: .12, y: .05 }, { x: .12, y: .48 }],
+        [{ x: .12, y: .48 }, { x: .72, y: .48 }, { x: .85, y: .65 }, { x: .65, y: .90 }, { x: .18, y: .82 }]
       ],
-      '6': [ [{x:.7,y:.05},{x:.48,y:.22},{x:.22,y:.45},{x:.18,y:.68},{x:.42,y:.9},{x:.78,y:.72},{x:.76,y:.5},{x:.46,y:.42},{x:.22,y:.52}] ],
-      '7': [ [{x:.08,y:.05},{x:.9,y:.05},{x:.42,y:.95}] ],
-      '8': [ [{x:.5,y:.5},{x:.75,y:.38},{x:.75,y:.18},{x:.5,y:.05},{x:.25,y:.18},{x:.25,y:.38},{x:.5,y:.5},{x:.75,y:.62},{x:.75,y:.82},{x:.5,y:.95},{x:.25,y:.82},{x:.25,y:.62},{x:.5,y:.5}] ],
-      '9': [ [{x:.80,y:.35},{x:.80,y:.15},{x:.62,y:.04},{x:.40,y:.04},{x:.22,y:.16},{x:.18,y:.38},{x:.26,y:.56},{x:.48,y:.65},{x:.74,y:.56},{x:.80,y:.40},{x:.80,y:.65},{x:.70,y:.85},{x:.55,y:.97}] ]
+      '6': [[{ x: .7, y: .05 }, { x: .48, y: .22 }, { x: .22, y: .45 }, { x: .18, y: .68 }, { x: .42, y: .9 }, { x: .78, y: .72 }, { x: .76, y: .5 }, { x: .46, y: .42 }, { x: .22, y: .52 }]],
+      '7': [[{ x: .08, y: .05 }, { x: .9, y: .05 }, { x: .42, y: .95 }]],
+      '8': [[{ x: .5, y: .5 }, { x: .75, y: .38 }, { x: .75, y: .18 }, { x: .5, y: .05 }, { x: .25, y: .18 }, { x: .25, y: .38 }, { x: .5, y: .5 }, { x: .75, y: .62 }, { x: .75, y: .82 }, { x: .5, y: .95 }, { x: .25, y: .82 }, { x: .25, y: .62 }, { x: .5, y: .5 }]],
+      '9': [[{ x: .80, y: .35 }, { x: .80, y: .15 }, { x: .62, y: .04 }, { x: .40, y: .04 }, { x: .22, y: .16 }, { x: .18, y: .38 }, { x: .26, y: .56 }, { x: .48, y: .65 }, { x: .74, y: .56 }, { x: .80, y: .40 }, { x: .80, y: .65 }, { x: .70, y: .85 }, { x: .55, y: .97 }]]
     };
 
     // ── 획 경로 그리기 헬퍼 ──
@@ -783,16 +814,16 @@
       if (pts.length < 2) return pts;
       const out = [], n = pts.length, steps = 16;
       for (let i = 0; i < n - 1; i++) {
-        const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(n-1,i+2)];
+        const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(n - 1, i + 2)];
         for (let j = 0; j < steps; j++) {
-          const t = j/steps, t2 = t*t, t3 = t2*t;
+          const t = j / steps, t2 = t * t, t3 = t2 * t;
           out.push({
-            x: 0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
-            y: 0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+            x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+            y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
           });
         }
       }
-      out.push(pts[n-1]);
+      out.push(pts[n - 1]);
       return out;
     }
 
@@ -814,9 +845,9 @@
       // guideCtx는 setupCanvas에서 이미 Jua 폰트로 그렸으므로 폰트 로드 보장
       const m = guideCtx.measureText(item.letter);
       const hasM = m.actualBoundingBoxLeft > 1 && m.actualBoundingBoxAscent > 1;
-      const cL = hasM ? w / 2 - m.actualBoundingBoxLeft  : w * 0.15;
+      const cL = hasM ? w / 2 - m.actualBoundingBoxLeft : w * 0.15;
       const cT = hasM ? h / 2 - m.actualBoundingBoxAscent : h * 0.15;
-      const cW = hasM ? m.actualBoundingBoxLeft + m.actualBoundingBoxRight  : w * 0.7;
+      const cW = hasM ? m.actualBoundingBoxLeft + m.actualBoundingBoxRight : w * 0.7;
       const cH = hasM ? m.actualBoundingBoxAscent + m.actualBoundingBoxDescent : h * 0.7;
 
       // 절대좌표 변환 → Catmull-Rom 스무딩
@@ -852,8 +883,8 @@
         const segs = [];
         let totalLen = 0;
         for (let i = 1; i < spts.length; i++) {
-          const len = Math.hypot(spts[i].x - spts[i-1].x, spts[i].y - spts[i-1].y);
-          segs.push({ x0: spts[i-1].x, y0: spts[i-1].y, x1: spts[i].x, y1: spts[i].y, len });
+          const len = Math.hypot(spts[i].x - spts[i - 1].x, spts[i].y - spts[i - 1].y);
+          segs.push({ x0: spts[i - 1].x, y0: spts[i - 1].y, x1: spts[i].x, y1: spts[i].y, len });
           totalLen += len;
         }
         const SPEED = Math.min(w, h) * 0.55;
@@ -971,7 +1002,6 @@
 
     // ── TAP ──
     function handleTap(item, btn) {
-      currentItem = item;
       for (let i = 0; i < 5; i++) {
         const sp = document.createElement('span');
         sp.className = 'sparkle';
@@ -983,11 +1013,15 @@
         btn.appendChild(sp);
         setTimeout(() => sp.remove(), 700);
       }
-      const _idx = DATA.indexOf(item);
-      const nums = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'];
-      const countFallback = nums.slice(0, item.count).join(', ') + '! ' + item.sound;
+      stopAllAudio();
+      overlay.classList.add('active');
+      showItemInOverlay(item);
+    }
 
-      // 오버레이 DOM 미리 세팅 (오디오 끝난 뒤 바로 표시)
+    // ── OVERLAY 이전/다음 이동 ──
+    function showItemInOverlay(item) {
+      currentItem = item;
+      const _idx = DATA.indexOf(item);
       resEmoji.textContent = item.emoji;
       resLetter.textContent = item.letter;
       resLetter.style.color = item.color;
@@ -997,41 +1031,36 @@
       for (let c = 0; c < item.count; c++) {
         const s = document.createElement('span');
         s.textContent = item.countEmoji;
-        s.style.animationDelay = (c * 0.12) + 's';
         resCount.appendChild(s);
       }
-
-      function lightUp(intervalMs) {
-        const spans = resCount.querySelectorAll('span');
-        spans.forEach((span, i) => setTimeout(() => span.classList.add('lit'), i * intervalMs));
-      }
-
-      function playCount() {
-        stopAllAudio();
-        const countAudio = new Audio('audio/number/count-' + _idx + '.mp3');
-        _curAudio = countAudio;
-        // duration 로드되면 count 구간(오디오 앞 65%) 기준으로 간격 계산
-        countAudio.addEventListener('loadedmetadata', () => {
-          const intervalMs = (countAudio.duration * 0.65 * 1000) / Math.max(item.count, 1);
-          lightUp(intervalMs);
-        }, { once: true });
-        countAudio.onerror = () => { lightUp(550); speak(countFallback); };
-        countAudio.play().catch(() => { lightUp(550); speak(countFallback); });
-      }
-
       stopAllAudio();
-      // 팝업은 즉시 표시 (이모지는 흑백으로 시작)
-      overlay.classList.add('active');
-
-      if (DEV) { lightUp(300); playCount(); return; }
-
-      // word 오디오 재생 → 끝나면 count 오디오 + 순차 점등
-      const wordAudio = new Audio('audio/number/word-' + _idx + '.mp3');
-      _curAudio = wordAudio;
-      wordAudio.onended = playCount;
-      wordAudio.onerror = () => { speak(item.word); setTimeout(playCount, 800); };
-      wordAudio.play().catch(() => { speak(item.word); setTimeout(playCount, 800); });
+      const nums = ['하나', '둘', '셋', '넷', '다섯', '여섯', '일곱', '여덟', '아홉'];
+      const countFb = nums.slice(0, item.count).join(', ') + '! ' + item.sound;
+      function lightUp(ms) { resCount.querySelectorAll('span').forEach((sp, i) => setTimeout(() => sp.classList.add('lit'), i * ms)); }
+      function playCount() {
+        const ca = new Audio('audio/number/count-' + _idx + '.mp3'); _curAudio = ca;
+        ca.addEventListener('loadedmetadata', () => { lightUp((ca.duration * 0.65 * 1000) / Math.max(item.count, 1)); }, { once: true });
+        ca.onerror = () => { lightUp(550); speak(countFb); }; ca.play().catch(() => { lightUp(550); speak(countFb); });
+      }
+      const wa = new Audio('audio/number/word-' + _idx + '.mp3'); _curAudio = wa;
+      wa.onended = playCount; wa.onerror = () => { speak(item.word); setTimeout(playCount, 800); };
+      wa.play().catch(() => { speak(item.word); setTimeout(playCount, 800); });
     }
+    function navigateOverlay(dir) {
+      const idx = DATA.indexOf(currentItem);
+      showItemInOverlay(DATA[(idx + dir + DATA.length) % DATA.length]);
+    }
+    document.getElementById('resNavLeft').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); navigateOverlay(-1); });
+    document.getElementById('resNavRight').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); navigateOverlay(1); });
+    let _swipeX = null;
+    const _card = document.getElementById('resultCard');
+    _card.addEventListener('pointerdown', (e) => { _swipeX = e.clientX; }, { passive: true });
+    _card.addEventListener('pointerup', (e) => {
+      if (_swipeX === null) return;
+      const dx = e.clientX - _swipeX; _swipeX = null;
+      if (Math.abs(dx) < 50) return;
+      navigateOverlay(dx < 0 ? 1 : -1);
+    });
 
     // ── RESULT BUTTONS ──
     btnAgain.addEventListener('pointerdown', (e) => { e.preventDefault(); stopAllAudio(); overlay.classList.remove('active'); });

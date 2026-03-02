@@ -163,6 +163,35 @@
       display: flex;
     }
 
+    .result-nav {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      font-size: 52px;
+      color: rgba(255, 255, 255, 0.85);
+      font-weight: 900;
+      cursor: pointer;
+      padding: 12px 10px;
+      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
+      user-select: none;
+      z-index: 10;
+      transition: transform 0.1s, opacity 0.1s;
+      line-height: 1;
+    }
+
+    .result-nav-left {
+      left: 6px;
+    }
+
+    .result-nav-right {
+      right: 6px;
+    }
+
+    .result-nav:active {
+      transform: translateY(-50%) scale(0.85);
+      opacity: 0.6;
+    }
+
     .result-card {
       background-color: #ffffff !important;
       color: #5B4A3F !important;
@@ -630,7 +659,8 @@
   </div>
 
   <div class="result-overlay" id="overlay">
-    <div class="result-card" style="background-color:#ffffff;color:#5B4A3F;">
+    <div class="result-nav result-nav-left" id="resNavLeft">&#8249;</div>
+    <div class="result-card" id="resultCard" style="background-color:#ffffff;color:#5B4A3F;">
       <div class="result-emoji" id="resEmoji"></div>
       <div class="result-letter" id="resLetter"></div>
       <div class="result-word" id="resWord" style="color:#5B4A3F;"></div>
@@ -641,6 +671,7 @@
         <button class="action-btn btn-trace" id="btnTrace" style="background-color:#4ECDC4;color:#fff;">따라쓰기 ✏️</button>
       </div>
     </div>
+    <div class="result-nav result-nav-right" id="resNavRight">&#8250;</div>
   </div>
 
   <div class="screen" id="traceScreen" style="background-color:#FFF8E7 !important;">
@@ -708,63 +739,63 @@
 
     // ── 필순 획 데이터 (글자 bounding box 기준 0~1, 좌상=0,0 우하=1,1) ──
     const STROKES = {
-      'ㄱ': [ [{x:.05,y:.08},{x:.92,y:.08},{x:.92,y:.92}] ],
-      'ㄴ': [ [{x:.08,y:.05},{x:.08,y:.92},{x:.92,y:.92}] ],
+      'ㄱ': [[{ x: .05, y: .08 }, { x: .92, y: .08 }, { x: .92, y: .92 }]],
+      'ㄴ': [[{ x: .08, y: .05 }, { x: .08, y: .92 }, { x: .92, y: .92 }]],
       'ㄷ': [
-        [{x:.05,y:.05},{x:.95,y:.05}],
-        [{x:.05,y:.05},{x:.05,y:.95},{x:.95,y:.95}]
+        [{ x: .05, y: .05 }, { x: .95, y: .05 }],
+        [{ x: .05, y: .05 }, { x: .05, y: .95 }, { x: .95, y: .95 }]
       ],
       'ㄹ': [
-        [{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.5}],
-        [{x:.05,y:.5},{x:.95,y:.5}],
-        [{x:.05,y:.5},{x:.05,y:.95},{x:.95,y:.95}]
+        [{ x: .05, y: .05 }, { x: .95, y: .05 }, { x: .95, y: .5 }],
+        [{ x: .05, y: .5 }, { x: .95, y: .5 }],
+        [{ x: .05, y: .5 }, { x: .05, y: .95 }, { x: .95, y: .95 }]
       ],
       'ㅁ': [
-        [{x:.05,y:.05},{x:.05,y:.95}],
-        [{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.95}],
-        [{x:.05,y:.95},{x:.95,y:.95}]
+        [{ x: .05, y: .05 }, { x: .05, y: .95 }],
+        [{ x: .05, y: .05 }, { x: .95, y: .05 }, { x: .95, y: .95 }],
+        [{ x: .05, y: .95 }, { x: .95, y: .95 }]
       ],
       'ㅂ': [
-        [{x:.1,y:.05},{x:.1,y:.95}],
-        [{x:.9,y:.05},{x:.9,y:.95}],
-        [{x:.1,y:.5},{x:.9,y:.5}],
-        [{x:.1,y:.92},{x:.9,y:.92}]
+        [{ x: .1, y: .05 }, { x: .1, y: .95 }],
+        [{ x: .9, y: .05 }, { x: .9, y: .95 }],
+        [{ x: .1, y: .5 }, { x: .9, y: .5 }],
+        [{ x: .1, y: .92 }, { x: .9, y: .92 }]
       ],
       'ㅅ': [
-        [{x:.5,y:.05},{x:.1,y:.92}],
-        [{x:.5,y:.05},{x:.9,y:.92}]
+        [{ x: .5, y: .05 }, { x: .1, y: .92 }],
+        [{ x: .5, y: .05 }, { x: .9, y: .92 }]
       ],
-      'ㅇ': [ [{x:.5,y:.05},{x:.1,y:.2},{x:.02,y:.5},{x:.1,y:.8},{x:.5,y:.95},{x:.9,y:.8},{x:.98,y:.5},{x:.9,y:.2},{x:.5,y:.05}] ],
+      'ㅇ': [[{ x: .5, y: .05 }, { x: .1, y: .2 }, { x: .02, y: .5 }, { x: .1, y: .8 }, { x: .5, y: .95 }, { x: .9, y: .8 }, { x: .98, y: .5 }, { x: .9, y: .2 }, { x: .5, y: .05 }]],
       'ㅈ': [
-        [{x:.05,y:.28},{x:.95,y:.28}],
-        [{x:.5,y:.28},{x:.1,y:.95}],
-        [{x:.5,y:.28},{x:.9,y:.95}]
+        [{ x: .05, y: .28 }, { x: .95, y: .28 }],
+        [{ x: .5, y: .28 }, { x: .1, y: .95 }],
+        [{ x: .5, y: .28 }, { x: .9, y: .95 }]
       ],
       'ㅊ': [
-        [{x:.5,y:.02},{x:.5,y:.2}],
-        [{x:.05,y:.35},{x:.95,y:.35}],
-        [{x:.5,y:.35},{x:.08,y:.95}],
-        [{x:.5,y:.35},{x:.92,y:.95}]
+        [{ x: .5, y: .02 }, { x: .5, y: .2 }],
+        [{ x: .05, y: .35 }, { x: .95, y: .35 }],
+        [{ x: .5, y: .35 }, { x: .08, y: .95 }],
+        [{ x: .5, y: .35 }, { x: .92, y: .95 }]
       ],
       'ㅋ': [
-        [{x:.05,y:.22},{x:.95,y:.22},{x:.95,y:.90}],
-        [{x:.05,y:.56},{x:.95,y:.56}]
+        [{ x: .05, y: .22 }, { x: .95, y: .22 }, { x: .95, y: .90 }],
+        [{ x: .05, y: .56 }, { x: .95, y: .56 }]
       ],
       'ㅌ': [
-        [{x:.05,y:.05},{x:.95,y:.05}],
-        [{x:.05,y:.05},{x:.05,y:.95},{x:.95,y:.95}],
-        [{x:.05,y:.52},{x:.95,y:.52}]
+        [{ x: .05, y: .05 }, { x: .95, y: .05 }],
+        [{ x: .05, y: .05 }, { x: .05, y: .95 }, { x: .95, y: .95 }],
+        [{ x: .05, y: .52 }, { x: .95, y: .52 }]
       ],
       'ㅍ': [
-        [{x:.05,y:.18},{x:.95,y:.18}],
-        [{x:.3,y:.18},{x:.3,y:.95}],
-        [{x:.7,y:.18},{x:.7,y:.95}],
-        [{x:.05,y:.95},{x:.95,y:.95}]
+        [{ x: .05, y: .18 }, { x: .95, y: .18 }],
+        [{ x: .3, y: .18 }, { x: .3, y: .95 }],
+        [{ x: .7, y: .18 }, { x: .7, y: .95 }],
+        [{ x: .05, y: .95 }, { x: .95, y: .95 }]
       ],
       'ㅎ': [
-        [{x:.5,y:.02},{x:.5,y:.18}],
-        [{x:.08,y:.30},{x:.92,y:.30}],
-        [{x:.5,y:.32},{x:.08,y:.44},{x:.02,y:.63},{x:.12,y:.82},{x:.5,y:.95},{x:.88,y:.82},{x:.98,y:.63},{x:.92,y:.44},{x:.5,y:.32}]
+        [{ x: .5, y: .02 }, { x: .5, y: .18 }],
+        [{ x: .08, y: .30 }, { x: .92, y: .30 }],
+        [{ x: .5, y: .32 }, { x: .08, y: .44 }, { x: .02, y: .63 }, { x: .12, y: .82 }, { x: .5, y: .95 }, { x: .88, y: .82 }, { x: .98, y: .63 }, { x: .92, y: .44 }, { x: .5, y: .32 }]
       ]
     };
 
@@ -803,16 +834,16 @@
       if (pts.length < 2) return pts;
       const out = [], n = pts.length, steps = 16;
       for (let i = 0; i < n - 1; i++) {
-        const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(n-1,i+2)];
+        const p0 = pts[Math.max(0, i - 1)], p1 = pts[i], p2 = pts[i + 1], p3 = pts[Math.min(n - 1, i + 2)];
         for (let j = 0; j < steps; j++) {
-          const t = j/steps, t2 = t*t, t3 = t2*t;
+          const t = j / steps, t2 = t * t, t3 = t2 * t;
           out.push({
-            x: 0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
-            y: 0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+            x: 0.5 * ((2 * p1.x) + (-p0.x + p2.x) * t + (2 * p0.x - 5 * p1.x + 4 * p2.x - p3.x) * t2 + (-p0.x + 3 * p1.x - 3 * p2.x + p3.x) * t3),
+            y: 0.5 * ((2 * p1.y) + (-p0.y + p2.y) * t + (2 * p0.y - 5 * p1.y + 4 * p2.y - p3.y) * t2 + (-p0.y + 3 * p1.y - 3 * p2.y + p3.y) * t3)
           });
         }
       }
-      out.push(pts[n-1]);
+      out.push(pts[n - 1]);
       return out;
     }
 
@@ -833,9 +864,9 @@
       // guideCtx는 setupCanvas에서 이미 Jua 폰트로 그렸으므로 폰트 로드 보장
       const m = guideCtx.measureText(item.letter);
       const hasM = m.actualBoundingBoxLeft > 1 && m.actualBoundingBoxAscent > 1;
-      const cL = hasM ? w / 2 - m.actualBoundingBoxLeft  : w * 0.15;
+      const cL = hasM ? w / 2 - m.actualBoundingBoxLeft : w * 0.15;
       const cT = hasM ? h / 2 - m.actualBoundingBoxAscent : h * 0.15;
-      const cW = hasM ? m.actualBoundingBoxLeft + m.actualBoundingBoxRight  : w * 0.7;
+      const cW = hasM ? m.actualBoundingBoxLeft + m.actualBoundingBoxRight : w * 0.7;
       const cH = hasM ? m.actualBoundingBoxAscent + m.actualBoundingBoxDescent : h * 0.7;
 
       // 절대좌표 변환 → Catmull-Rom 스무딩
@@ -871,8 +902,8 @@
         const segs = [];
         let totalLen = 0;
         for (let i = 1; i < spts.length; i++) {
-          const len = Math.hypot(spts[i].x - spts[i-1].x, spts[i].y - spts[i-1].y);
-          segs.push({ x0: spts[i-1].x, y0: spts[i-1].y, x1: spts[i].x, y1: spts[i].y, len });
+          const len = Math.hypot(spts[i].x - spts[i - 1].x, spts[i].y - spts[i - 1].y);
+          segs.push({ x0: spts[i - 1].x, y0: spts[i - 1].y, x1: spts[i].x, y1: spts[i].y, len });
           totalLen += len;
         }
         const SPEED = Math.min(w, h) * 0.55;
@@ -1004,20 +1035,44 @@
         setTimeout(() => sp.remove(), 700);
       }
 
-      const _idx = DATA.indexOf(item);
+      if (DEV) {
+        showItemInOverlay(item);
+        overlay.classList.add('active');
+        return;
+      }
+      playAudio('audio/hangul/combined-' + DATA.indexOf(item) + '.mp3', item.letter + ' ' + item.sound);
+      setTimeout(() => { showItemInOverlay(item); overlay.classList.add('active'); }, 400);
+    }
+
+    // ── OVERLAY 이전/다음 이동 ──
+    function showItemInOverlay(item) {
+      currentItem = item;
       resEmoji.textContent = item.emoji;
       resLetter.textContent = item.letter;
       resLetter.style.color = item.color;
       resWord.textContent = item.word;
       resSub.textContent = item.sound;
-
-      if (DEV) {
-        overlay.classList.add('active');
-        return;
-      }
-      playAudio('audio/hangul/combined-' + _idx + '.mp3', item.letter + ' ' + item.sound);
-      setTimeout(() => { overlay.classList.add('active'); }, 400);
+      const idx = DATA.indexOf(item);
+      stopAllAudio();
+      playAudio('audio/hangul/combined-' + idx + '.mp3', item.letter + ' ' + item.sound);
     }
+    function navigateOverlay(dir) {
+      const idx = DATA.indexOf(currentItem);
+      showItemInOverlay(DATA[(idx + dir + DATA.length) % DATA.length]);
+    }
+    document.getElementById('resNavLeft').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); navigateOverlay(-1); });
+    document.getElementById('resNavRight').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); navigateOverlay(1); });
+
+    // 스와이프 제스처
+    let _swipeX = null;
+    const _card = document.getElementById('resultCard');
+    _card.addEventListener('pointerdown', (e) => { _swipeX = e.clientX; }, { passive: true });
+    _card.addEventListener('pointerup', (e) => {
+      if (_swipeX === null) return;
+      const dx = e.clientX - _swipeX; _swipeX = null;
+      if (Math.abs(dx) < 50) return;
+      navigateOverlay(dx < 0 ? 1 : -1);
+    });
 
     // ── RESULT BUTTONS ──
     btnAgain.addEventListener('pointerdown', (e) => { e.preventDefault(); stopAllAudio(); overlay.classList.remove('active'); });
