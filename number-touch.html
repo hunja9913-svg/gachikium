@@ -710,8 +710,11 @@
   <div class="screen" id="traceScreen" style="background-color:#EEFBF5 !important;">
     <div class="trace-header">
       <div class="trace-title" id="traceTitle" style="color:#3F5B4A;"></div>
-      <button class="trace-back-btn" id="traceBackBtn" style="background-color:#FF8A5C;color:#fff;" data-ko="돌아가기"
-        data-en="Back">돌아가기</button>
+      <div style="display:flex;gap:8px;">
+        <button class="trace-back-btn" id="traceReplayBtn" style="background-color:#FB923C;color:#fff;">다시보기 🎬</button>
+        <button class="trace-back-btn" id="traceBackBtn" style="background-color:#FF8A5C;color:#fff;" data-ko="← 돌아가기"
+          data-en="← Back">← 돌아가기</button>
+      </div>
     </div>
     <div class="canvas-wrap" id="canvasWrap" style="background-color:#ffffff;">
       <canvas id="guideCanvas"></canvas>
@@ -720,7 +723,6 @@
     </div>
     <div class="trace-btns">
       <button class="trace-clear-btn" id="traceClearBtn" style="background-color:#A78BFA;color:#fff;">지우기 🧹</button>
-      <button class="trace-replay-btn" id="traceReplayBtn" style="background-color:#FB923C;color:#fff;">획순 🎬</button>
       <button class="trace-next-btn" id="traceNextBtn" style="background-color:#4ECDC4;color:#fff;" data-ko="다했어요! ⭐"
         data-en="Done! ⭐">다했어요! ⭐</button>
     </div>
