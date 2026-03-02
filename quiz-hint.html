@@ -121,7 +121,7 @@
       background: #ffffff;
       border: 3px solid #E8E0D4;
       border-radius: 16px;
-      padding: 14px 10px;
+      padding: 14px 10px 10px;
       font-family: inherit;
       font-size: clamp(16px, 4vw, 20px);
       color: #A09080;
@@ -130,6 +130,25 @@
       box-shadow: 0 4px 0 rgba(0, 0, 0, 0.05);
       opacity: 0.6;
       filter: grayscale(1);
+      position: relative;
+    }
+
+    /* ON/OFF 인디케이터 — 꺼짐: 빈 원 */
+    .cat-btn::after {
+      content: '';
+      position: absolute;
+      bottom: 7px;
+      right: 10px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #D0C8C0;
+      background: #F0EBE5;
+      transition: all 0.2s;
+      font-size: 11px;
+      line-height: 14px;
+      text-align: center;
+      color: white;
     }
 
     .cat-btn.active {
@@ -140,6 +159,13 @@
       filter: grayscale(0);
       box-shadow: 0 6px 0 rgba(255, 202, 40, 0.3);
       transform: translateY(-2px);
+    }
+
+    /* ON/OFF 인디케이터 — 켜짐: 초록 체크 */
+    .cat-btn.active::after {
+      content: '✓';
+      background: #66BB6A;
+      border-color: #66BB6A;
     }
 
     .cat-btn:active {
@@ -670,8 +696,7 @@
     <div class="start-card" style="background-color:#ffffff;">
       <div class="start-emoji">💡</div>
       <div class="start-title" style="color:#5B4040;" data-ko="힌트 퀴즈" data-en="Hint Quiz">힌트 퀴즈</div>
-      <div class="start-desc" style="color:#807060;" data-ko="퀴즈 주제를 골라주세요!" data-en="Choose your quiz topics!">퀴즈 주제를
-        골라주세요!</div>
+      <div class="start-desc" style="color:#807060;" data-ko="주제를 눌러서 켜고 끄세요!" data-en="Tap to toggle topics!">주제를 눌러서 켜고 끄세요!</div>
 
       <div class="category-grid" id="categoryGrid">
         <button class="cat-btn active" data-cat="food">🍎 달콤한 먹거리</button>
