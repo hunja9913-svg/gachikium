@@ -328,8 +328,15 @@
       z-index: 1;
     }
 
-    #drawCanvas {
+    #animCanvas {
       z-index: 2;
+      display: none;
+      opacity: 1;
+      transition: opacity 0.5s;
+    }
+
+    #drawCanvas {
+      z-index: 3;
     }
 
     .trace-btns {
@@ -644,10 +651,12 @@
     </div>
     <div class="canvas-wrap" id="canvasWrap" style="background-color:#ffffff;">
       <canvas id="guideCanvas"></canvas>
+      <canvas id="animCanvas"></canvas>
       <canvas id="drawCanvas"></canvas>
     </div>
     <div class="trace-btns">
       <button class="trace-clear-btn" id="traceClearBtn" style="background-color:#A78BFA;color:#fff;">지우기 🧹</button>
+      <button class="trace-replay-btn" id="traceReplayBtn" style="background-color:#FB923C;color:#fff;">획순 🎬</button>
       <button class="trace-next-btn" id="traceNextBtn" style="background-color:#4ECDC4;color:#fff;" data-ko="다했어요! ⭐"
         data-en="Done! ⭐">다했어요! ⭐</button>
     </div>
@@ -665,7 +674,7 @@
 
   <script>
     const DATA = [
-      { letter: 'ㄱ', word: '기차', emoji: '🚂', color: '#FF6B6B', sound: '치카치카 기차!' },
+      { letter: 'ㄱ', word: '기차', emoji: '🚂', color: '#FF6B6B', sound: '칙칙폭폭 기차!' },
       { letter: 'ㄴ', word: '나비', emoji: '🦋', color: '#A78BFA', sound: '팔랑팔랑 나비!' },
       { letter: 'ㄷ', word: '도넛', emoji: '🍩', color: '#F59E0B', sound: '맛있는 도넛!' },
       { letter: 'ㄹ', word: '로봇', emoji: '🤖', color: '#6EE7B7', sound: '삐빅 로봇!' },
@@ -697,9 +706,253 @@
       document.body.appendChild(badge);
     }
 
+    // ── 필순 획 데이터 (글자 bounding box 기준 0~1, 좌상=0,0 우하=1,1) ──
+    const STROKES = {
+      'ㄱ': [ [{x:.05,y:.08},{x:.92,y:.08},{x:.92,y:.92}] ],
+      'ㄴ': [ [{x:.08,y:.05},{x:.08,y:.92},{x:.92,y:.92}] ],
+      'ㄷ': [
+        [{x:.05,y:.05},{x:.95,y:.05}],
+        [{x:.05,y:.05},{x:.05,y:.95},{x:.95,y:.95}]
+      ],
+      'ㄹ': [
+        [{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.5}],
+        [{x:.05,y:.5},{x:.95,y:.5}],
+        [{x:.05,y:.5},{x:.05,y:.95},{x:.95,y:.95}]
+      ],
+      'ㅁ': [
+        [{x:.05,y:.05},{x:.05,y:.95}],
+        [{x:.05,y:.05},{x:.95,y:.05},{x:.95,y:.95}],
+        [{x:.05,y:.95},{x:.95,y:.95}]
+      ],
+      'ㅂ': [
+        [{x:.1,y:.05},{x:.1,y:.95}],
+        [{x:.9,y:.05},{x:.9,y:.95}],
+        [{x:.1,y:.5},{x:.9,y:.5}],
+        [{x:.1,y:.92},{x:.9,y:.92}]
+      ],
+      'ㅅ': [
+        [{x:.5,y:.05},{x:.1,y:.92}],
+        [{x:.5,y:.05},{x:.9,y:.92}]
+      ],
+      'ㅇ': [ [{x:.5,y:.05},{x:.1,y:.2},{x:.02,y:.5},{x:.1,y:.8},{x:.5,y:.95},{x:.9,y:.8},{x:.98,y:.5},{x:.9,y:.2},{x:.5,y:.05}] ],
+      'ㅈ': [
+        [{x:.05,y:.28},{x:.95,y:.28}],
+        [{x:.5,y:.28},{x:.1,y:.95}],
+        [{x:.5,y:.28},{x:.9,y:.95}]
+      ],
+      'ㅊ': [
+        [{x:.5,y:.02},{x:.5,y:.2}],
+        [{x:.05,y:.35},{x:.95,y:.35}],
+        [{x:.5,y:.35},{x:.08,y:.95}],
+        [{x:.5,y:.35},{x:.92,y:.95}]
+      ],
+      'ㅋ': [
+        [{x:.05,y:.22},{x:.95,y:.22},{x:.95,y:.90}],
+        [{x:.05,y:.56},{x:.95,y:.56}]
+      ],
+      'ㅌ': [
+        [{x:.05,y:.05},{x:.95,y:.05}],
+        [{x:.05,y:.05},{x:.05,y:.95},{x:.95,y:.95}],
+        [{x:.05,y:.52},{x:.95,y:.52}]
+      ],
+      'ㅍ': [
+        [{x:.05,y:.18},{x:.95,y:.18}],
+        [{x:.3,y:.18},{x:.3,y:.95}],
+        [{x:.7,y:.18},{x:.7,y:.95}],
+        [{x:.05,y:.95},{x:.95,y:.95}]
+      ],
+      'ㅎ': [
+        [{x:.5,y:.02},{x:.5,y:.18}],
+        [{x:.08,y:.30},{x:.92,y:.30}],
+        [{x:.5,y:.32},{x:.08,y:.44},{x:.02,y:.63},{x:.12,y:.82},{x:.5,y:.95},{x:.88,y:.82},{x:.98,y:.63},{x:.92,y:.44},{x:.5,y:.32}]
+      ]
+    };
+
+    // ── 획 경로 그리기 헬퍼 ──
+    function drawPath(ctx, pts, color, lineW) {
+      if (pts.length < 2) return;
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.strokeStyle = color;
+      ctx.lineWidth = lineW;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    // ── 글로우 스타일 획 그리기 ──
+    function drawGlowStroke(ctx, pts, color, lw, alpha) {
+      if (pts.length < 2) return;
+      ctx.save();
+      ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+      ctx.beginPath();
+      ctx.moveTo(pts[0].x, pts[0].y);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+      ctx.globalAlpha = alpha * 0.5;
+      ctx.strokeStyle = color; ctx.lineWidth = lw * 2.6; ctx.stroke();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = color; ctx.lineWidth = lw * 0.75; ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    // ── Catmull-Rom 스플라인 스무딩 ──
+    function catmullRom(pts) {
+      if (pts.length < 2) return pts;
+      const out = [], n = pts.length, steps = 16;
+      for (let i = 0; i < n - 1; i++) {
+        const p0 = pts[Math.max(0,i-1)], p1 = pts[i], p2 = pts[i+1], p3 = pts[Math.min(n-1,i+2)];
+        for (let j = 0; j < steps; j++) {
+          const t = j/steps, t2 = t*t, t3 = t2*t;
+          out.push({
+            x: 0.5*((2*p1.x)+(-p0.x+p2.x)*t+(2*p0.x-5*p1.x+4*p2.x-p3.x)*t2+(-p0.x+3*p1.x-3*p2.x+p3.x)*t3),
+            y: 0.5*((2*p1.y)+(-p0.y+p2.y)*t+(2*p0.y-5*p1.y+4*p2.y-p3.y)*t2+(-p0.y+3*p1.y-3*p2.y+p3.y)*t3)
+          });
+        }
+      }
+      out.push(pts[n-1]);
+      return out;
+    }
+
+    // ── 필순 애니메이션 ──
+    function animateStrokes(item, w, h, dpr, onDone) {
+      const strokes = STROKES[item.letter];
+      if (!strokes || DEV) { onDone(); return; }
+
+      animCanvas.style.display = 'block';
+      animCanvas.style.opacity = '1';
+      animCanvas.width = Math.round(w * dpr);
+      animCanvas.height = Math.round(h * dpr);
+      animCanvas.style.width = w + 'px';
+      animCanvas.style.height = h + 'px';
+      const actx = animCanvas.getContext('2d');
+      actx.setTransform(dpr, 0, 0, dpr, 0, 0);
+
+      // guideCtx는 setupCanvas에서 이미 Jua 폰트로 그렸으므로 폰트 로드 보장
+      const m = guideCtx.measureText(item.letter);
+      const hasM = m.actualBoundingBoxLeft > 1 && m.actualBoundingBoxAscent > 1;
+      const cL = hasM ? w / 2 - m.actualBoundingBoxLeft  : w * 0.15;
+      const cT = hasM ? h / 2 - m.actualBoundingBoxAscent : h * 0.15;
+      const cW = hasM ? m.actualBoundingBoxLeft + m.actualBoundingBoxRight  : w * 0.7;
+      const cH = hasM ? m.actualBoundingBoxAscent + m.actualBoundingBoxDescent : h * 0.7;
+
+      // 절대좌표 변환 → Catmull-Rom 스무딩
+      const smoothPts = strokes.map(s => catmullRom(s.map(p => ({ x: cL + p.x * cW, y: cT + p.y * cH }))));
+      const completedPts = [];
+      let strokeIdx = 0;
+      let rafId = null, toId = null, done = false;
+      const lineW = Math.max(14, Math.min(w, h) * 0.042);
+      const dotR = Math.max(11, Math.min(w, h) * 0.04);
+
+      function finish() {
+        if (done) return;
+        done = true;
+        if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+        if (toId) { clearTimeout(toId); toId = null; }
+        actx.clearRect(0, 0, w, h);
+        animCanvas.style.opacity = '0';
+        _animStop = null;
+        toId = setTimeout(() => { animCanvas.style.display = 'none'; }, 520);
+        onDone();
+      }
+      _animStop = () => finish();
+      animCanvas.addEventListener('pointerdown', () => { if (!done) finish(); }, { once: true });
+
+      function redrawCompleted() {
+        for (const cp of completedPts) drawGlowStroke(actx, cp, item.color, lineW, 0.5);
+      }
+
+      function runStroke() {
+        if (strokeIdx >= smoothPts.length) { finish(); return; }
+        const spts = smoothPts[strokeIdx++];
+        const startPt = spts[0];
+        const segs = [];
+        let totalLen = 0;
+        for (let i = 1; i < spts.length; i++) {
+          const len = Math.hypot(spts[i].x - spts[i-1].x, spts[i].y - spts[i-1].y);
+          segs.push({ x0: spts[i-1].x, y0: spts[i-1].y, x1: spts[i].x, y1: spts[i].y, len });
+          totalLen += len;
+        }
+        const SPEED = Math.min(w, h) * 0.55;
+        const duration = Math.max(500, (totalLen / SPEED) * 1000);
+        const t0 = performance.now();
+
+        function frame(now) {
+          if (done) return;
+          const prog = Math.min((now - t0) / duration, 1);
+          const targetDist = prog * totalLen;
+          let dist = 0, cx = spts[0].x, cy = spts[0].y;
+          const partial = [{ x: spts[0].x, y: spts[0].y }];
+          for (const seg of segs) {
+            if (dist + seg.len >= targetDist) {
+              const t = seg.len > 0 ? (targetDist - dist) / seg.len : 0;
+              cx = seg.x0 + t * (seg.x1 - seg.x0);
+              cy = seg.y0 + t * (seg.y1 - seg.y0);
+              partial.push({ x: cx, y: cy });
+              break;
+            }
+            partial.push({ x: seg.x1, y: seg.y1 });
+            dist += seg.len; cx = seg.x1; cy = seg.y1;
+          }
+          actx.clearRect(0, 0, w, h);
+          redrawCompleted();
+          // 현재 획 글로우로 차오르게
+          if (partial.length > 1) drawGlowStroke(actx, partial, item.color, lineW, 0.92);
+          // 획 번호 배지 (시작점 고정)
+          actx.beginPath();
+          actx.arc(startPt.x, startPt.y, dotR, 0, Math.PI * 2);
+          actx.fillStyle = item.color;
+          actx.fill();
+          actx.font = `bold ${Math.max(12, dotR)}px 'Jua', sans-serif`;
+          actx.fillStyle = 'white';
+          actx.textAlign = 'center';
+          actx.textBaseline = 'middle';
+          actx.fillText(String(strokeIdx), startPt.x, startPt.y);
+          // 이동 글로우 점
+          const grad = actx.createRadialGradient(cx, cy, 0, cx, cy, dotR * 2);
+          grad.addColorStop(0, 'white');
+          grad.addColorStop(0.35, item.color);
+          grad.addColorStop(1, item.color + '00');
+          actx.beginPath();
+          actx.arc(cx, cy, dotR * 2, 0, Math.PI * 2);
+          actx.fillStyle = grad;
+          actx.fill();
+          if (prog < 1) {
+            rafId = requestAnimationFrame(frame);
+          } else {
+            completedPts.push(spts);
+            toId = setTimeout(runStroke, 380);
+          }
+        }
+        rafId = requestAnimationFrame(frame);
+      }
+      runStroke();
+    }
+
+    // ── 획순 다시보기 ──
+    function replayAnimation() {
+      if (_animStop) { _animStop(); _animStop = null; }
+      else {
+        const actx = animCanvas.getContext('2d');
+        const dpr = window.devicePixelRatio || 1;
+        actx.clearRect(0, 0, animCanvas.width / dpr, animCanvas.height / dpr);
+        animCanvas.style.opacity = '0';
+        animCanvas.style.display = 'none';
+      }
+      const rect = canvasWrap.getBoundingClientRect();
+      const dpr = window.devicePixelRatio || 1;
+      drawCanvas.style.pointerEvents = 'none';
+      animateStrokes(currentItem, rect.width, rect.height, dpr, () => {
+        drawCanvas.style.pointerEvents = '';
+      });
+    }
+
     let currentItem = null;
     let drawAbort = null; // AbortController for draw listeners
     let isDrawing = false;
+    let _animStop = null;
 
     // DOM refs
     const grid = document.getElementById('grid');
@@ -715,6 +968,7 @@
     const traceTitle = document.getElementById('traceTitle');
     const canvasWrap = document.getElementById('canvasWrap');
     const guideCanvas = document.getElementById('guideCanvas');
+    const animCanvas = document.getElementById('animCanvas');
     const drawCanvas = document.getElementById('drawCanvas');
     const guideCtx = guideCanvas.getContext('2d');
     const drawCtx = drawCanvas.getContext('2d');
@@ -777,11 +1031,20 @@
     // ── TRACE ──
     function openTrace(item) {
       currentItem = item;
+      if (_animStop) { _animStop(); _animStop = null; }
       gridScreen.classList.remove('active');
       traceScreen.classList.add('active');
       traceTitle.innerHTML = `<span style="color:${item.color}">${item.letter}</span> 따라쓰기 ✏️`;
       playAudio('audio/hangul/trace-' + DATA.indexOf(item) + '.mp3', item.letter + ' 따라 써 보세요!');
-      setTimeout(() => setupCanvas(item), 80);
+      setTimeout(() => {
+        const rect = canvasWrap.getBoundingClientRect();
+        const dpr = window.devicePixelRatio || 1;
+        setupCanvas(item);
+        drawCanvas.style.pointerEvents = 'none';
+        animateStrokes(item, rect.width, rect.height, dpr, () => {
+          drawCanvas.style.pointerEvents = '';
+        });
+      }, 80);
     }
 
     function setupCanvas(item) {
@@ -878,9 +1141,16 @@
     // ── TRACE BUTTONS ──
     document.getElementById('traceClearBtn').addEventListener('pointerdown', (e) => {
       e.preventDefault();
+      if (_animStop) { _animStop(); _animStop = null; }
+      drawCanvas.style.pointerEvents = '';
       const dpr = window.devicePixelRatio || 1;
       drawCtx.clearRect(0, 0, drawCanvas.width / dpr, drawCanvas.height / dpr);
       playAudio('audio/common/again.mp3', '다시 써 보세요!');
+    });
+
+    document.getElementById('traceReplayBtn').addEventListener('pointerdown', (e) => {
+      e.preventDefault();
+      replayAnimation();
     });
 
     function checkCoverage(item) {
@@ -940,6 +1210,7 @@
 
     document.getElementById('traceBackBtn').addEventListener('pointerdown', (e) => {
       e.preventDefault();
+      if (_animStop) { _animStop(); _animStop = null; }
       stopAllAudio();
       if (drawAbort) drawAbort.abort();
       traceScreen.classList.remove('active');
