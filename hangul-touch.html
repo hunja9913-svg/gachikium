@@ -1048,11 +1048,11 @@
         return;
       }
       playAudio('audio/hangul/combined-' + DATA.indexOf(item) + '.mp3', item.letter + ' ' + item.sound);
-      setTimeout(() => { showItemInOverlay(item); overlay.classList.add('active'); }, 400);
+      setTimeout(() => { showItemInOverlay(item, false); overlay.classList.add('active'); }, 400);
     }
 
     // ── OVERLAY 이전/다음 이동 ──
-    function showItemInOverlay(item) {
+    function showItemInOverlay(item, playSound = true) {
       currentItem = item;
       resEmoji.textContent = item.emoji;
       resLetter.textContent = item.letter;
@@ -1067,8 +1067,10 @@
       navR.style.background = item.color;
       navL.style.boxShadow = `0 3px 10px ${item.color}66`;
       navR.style.boxShadow = `0 3px 10px ${item.color}66`;
-      stopAllAudio();
-      playAudio('audio/hangul/combined-' + idx + '.mp3', item.letter + ' ' + item.sound);
+      if (playSound) {
+        stopAllAudio();
+        playAudio('audio/hangul/combined-' + idx + '.mp3', item.letter + ' ' + item.sound);
+      }
     }
     function navigateOverlay(dir) {
       const idx = DATA.indexOf(currentItem);
