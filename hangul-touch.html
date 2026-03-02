@@ -1180,8 +1180,11 @@
         return { x: e.clientX - r.left, y: e.clientY - r.top };
       }
 
+      let activePointerId = null;
       drawCanvas.addEventListener('pointerdown', (e) => {
         e.preventDefault();
+        if (activePointerId !== null) return; // 이미 그리는 중 → 다른 손가락 무시
+        activePointerId = e.pointerId;
         isDrawing = true;
         const p = getPos(e);
         drawCtx.beginPath();
@@ -1193,7 +1196,7 @@
       }, { signal });
 
       drawCanvas.addEventListener('pointermove', (e) => {
-        if (!isDrawing) return;
+        if (!isDrawing || e.pointerId !== activePointerId) return; // 다른 손가락 무시
         e.preventDefault();
         const p = getPos(e);
         drawCtx.lineTo(p.x, p.y);
@@ -1202,9 +1205,16 @@
         drawCtx.moveTo(p.x, p.y);
       }, { signal });
 
-      drawCanvas.addEventListener('pointerup', (e) => { e.preventDefault(); isDrawing = false; }, { signal });
-      drawCanvas.addEventListener('pointercancel', () => { isDrawing = false; }, { signal });
-      drawCanvas.addEventListener('pointerleave', () => { isDrawing = false; }, { signal });
+      drawCanvas.addEventListener('pointerup', (e) => {
+        if (e.pointerId !== activePointerId) return;
+        e.preventDefault(); isDrawing = false; activePointerId = null;
+      }, { signal });
+      drawCanvas.addEventListener('pointercancel', (e) => {
+        if (e.pointerId === activePointerId) { isDrawing = false; activePointerId = null; }
+      }, { signal });
+      drawCanvas.addEventListener('pointerleave', (e) => {
+        if (e.pointerId === activePointerId) { isDrawing = false; activePointerId = null; }
+      }, { signal });
     }
 
     // ── TRACE BUTTONS ──
