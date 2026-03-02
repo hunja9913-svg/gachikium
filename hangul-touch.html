@@ -167,29 +167,34 @@
       position: absolute;
       top: 50%;
       transform: translateY(-50%);
-      font-size: 52px;
-      color: rgba(255, 255, 255, 0.85);
-      font-weight: 900;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.07);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+      color: #888;
       cursor: pointer;
-      padding: 12px 10px;
-      text-shadow: 0 2px 12px rgba(0, 0, 0, 0.25);
       user-select: none;
       z-index: 10;
-      transition: transform 0.1s, opacity 0.1s;
+      transition: background 0.15s, transform 0.1s;
+      -webkit-tap-highlight-color: transparent;
       line-height: 1;
     }
 
     .result-nav-left {
-      left: 6px;
+      left: 8px;
     }
 
     .result-nav-right {
-      right: 6px;
+      right: 8px;
     }
 
     .result-nav:active {
-      transform: translateY(-50%) scale(0.85);
-      opacity: 0.6;
+      background: rgba(0, 0, 0, 0.15);
+      transform: translateY(-50%) scale(0.88);
     }
 
     .result-card {
@@ -659,8 +664,8 @@
   </div>
 
   <div class="result-overlay" id="overlay">
-    <div class="result-nav result-nav-left" id="resNavLeft">&#8249;</div>
     <div class="result-card" id="resultCard" style="background-color:#ffffff;color:#5B4A3F;">
+      <div class="result-nav result-nav-left" id="resNavLeft">&#8249;</div>
       <div class="result-emoji" id="resEmoji"></div>
       <div class="result-letter" id="resLetter"></div>
       <div class="result-word" id="resWord" style="color:#5B4A3F;"></div>
@@ -670,8 +675,8 @@
           data-ko="또 하기! 🎉" data-en="Again! 🎉">또 하기! 🎉</button>
         <button class="action-btn btn-trace" id="btnTrace" style="background-color:#4ECDC4;color:#fff;">따라쓰기 ✏️</button>
       </div>
+      <div class="result-nav result-nav-right" id="resNavRight">&#8250;</div>
     </div>
-    <div class="result-nav result-nav-right" id="resNavRight">&#8250;</div>
   </div>
 
   <div class="screen" id="traceScreen" style="background-color:#FFF8E7 !important;">
